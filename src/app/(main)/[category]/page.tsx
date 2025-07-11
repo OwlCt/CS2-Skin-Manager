@@ -80,7 +80,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         <AppBreadcrumb.Item isCurrent>{categoryDisplayName}</AppBreadcrumb.Item>
       </AppBreadcrumb>
 
-      {/* Pass the data directly to WeaponList */}
       <WeaponList
         categoryName={categoryDisplayName}
         weapons={weapons}

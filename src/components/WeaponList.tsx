@@ -52,7 +52,6 @@ export default function WeaponList({
 
   const weaponKeys = Object.keys(weapons);
 
-  // Use categoryRoute to determine the image folder
   const imageBaseUrl =
     categoryRoute.toLowerCase() === "gloves"
       ? "/assets/gloves"
@@ -74,6 +73,35 @@ export default function WeaponList({
       );
 
       if (configuredKnife) {
+        // Check if there's also a skin configuration for this knife
+        const configuredSkin = userConfigs.skins.find(
+          (config) => config.weapon_defindex === weaponDefindex
+        );
+
+        if (configuredSkin) {
+          // Find the skin with matching paint_id
+          const matchingSkin = weaponSkins.find(
+            (skin) =>
+              parseInt(skin.paint_index) === configuredSkin.weapon_paint_id
+          );
+
+          if (matchingSkin) {
+            return {
+              ...matchingSkin,
+              name: `★ ${matchingSkin.weapon?.name || weaponKey}`,
+              configMeta: {
+                type: "knife",
+                team: configuredKnife.weapon_team,
+                wear: configuredSkin.weapon_wear,
+                seed: configuredSkin.weapon_seed,
+                nametag: configuredSkin.weapon_nametag,
+                stattrak: configuredSkin.weapon_stattrak,
+              },
+            };
+          }
+        }
+
+        // If knife is configured but no specific skin, return the first skin
         return {
           ...firstSkin,
           name: `★ ${firstSkin.weapon?.name || weaponKey}`,
@@ -87,13 +115,41 @@ export default function WeaponList({
       return null;
     }
 
-    // Check for glove configuration FIRST - prevent fallthrough to skins
     if (isGlove(weaponDefindex)) {
       const configuredGlove = userConfigs.gloves.find(
         (config) => config.weapon_defindex === weaponDefindex
       );
 
       if (configuredGlove) {
+        // Check if there's also a skin configuration for this glove
+        const configuredSkin = userConfigs.skins.find(
+          (config) => config.weapon_defindex === weaponDefindex
+        );
+
+        if (configuredSkin) {
+          // Find the skin with matching paint_id
+          const matchingSkin = weaponSkins.find(
+            (skin) =>
+              parseInt(skin.paint_index) === configuredSkin.weapon_paint_id
+          );
+
+          if (matchingSkin) {
+            return {
+              ...matchingSkin,
+              name: `★ ${matchingSkin.weapon?.name || weaponKey}`,
+              configMeta: {
+                type: "glove",
+                team: configuredGlove.weapon_team,
+                wear: configuredSkin.weapon_wear,
+                seed: configuredSkin.weapon_seed,
+                nametag: configuredSkin.weapon_nametag,
+                stattrak: configuredSkin.weapon_stattrak,
+              },
+            };
+          }
+        }
+
+        // If glove is configured but no specific skin, return the first skin
         return {
           ...firstSkin,
           name: `★ ${firstSkin.weapon?.name || weaponKey}`,
@@ -103,7 +159,7 @@ export default function WeaponList({
           },
         };
       }
-      // Important: Return null for gloves without config to prevent skin fallthrough
+
       return null;
     }
 
@@ -117,6 +173,7 @@ export default function WeaponList({
       const matchingSkin = weaponSkins.find(
         (skin) => parseInt(skin.paint_index) === configuredSkin.weapon_paint_id
       );
+
       if (matchingSkin) {
         // Add config metadata to the skin object
         return {

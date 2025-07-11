@@ -7,8 +7,8 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "CS Skin Viewer",
-  description: "Browse CS Skins",
+  title: "WeaponPaints Skin Changer",
+  description: "A skin changer for WeaponPaints",
 };
 
 export default async function RootLayout({
