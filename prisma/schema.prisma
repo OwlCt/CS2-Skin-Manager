@@ -1,0 +1,67 @@
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model wp_player_agents {
+    steamid  String  @unique(map: "steamid") @db.VarChar(18)
+    agent_ct String? @db.VarChar(64)
+    agent_t  String? @db.VarChar(64)
+}
+
+model wp_player_gloves {
+    steamid         String @db.VarChar(18)
+    weapon_team     Int
+    weapon_defindex Int
+
+    @@unique([steamid, weapon_team], map: "steamid")
+}
+
+model wp_player_knife {
+    steamid     String @db.VarChar(18)
+    weapon_team Int
+    knife       String @db.VarChar(64)
+
+    @@unique([steamid, weapon_team], map: "steamid")
+}
+
+model wp_player_music {
+    steamid     String @db.VarChar(64)
+    weapon_team Int
+    music_id    Int
+
+    @@unique([steamid, weapon_team], map: "steamid")
+}
+
+model wp_player_pins {
+    steamid     String @db.VarChar(64)
+    weapon_team Int
+    id          Int
+
+    @@unique([steamid, weapon_team], map: "steamid")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model wp_player_skins {
+    steamid               String  @db.VarChar(18)
+    weapon_team           Int
+    weapon_defindex       Int
+    weapon_paint_id       Int
+    weapon_wear           Float   @default(0.000001) @db.Float
+    weapon_seed           Int     @default(0)
+    weapon_nametag        String? @db.VarChar(128)
+    weapon_stattrak       Boolean @default(false)
+    weapon_stattrak_count Int     @default(0)
+    weapon_sticker_0      String  @default("0;0;0;0;0;0;0") @db.VarChar(128)
+    weapon_sticker_1      String  @default("0;0;0;0;0;0;0") @db.VarChar(128)
+    weapon_sticker_2      String  @default("0;0;0;0;0;0;0") @db.VarChar(128)
+    weapon_sticker_3      String  @default("0;0;0;0;0;0;0") @db.VarChar(128)
+    weapon_sticker_4      String  @default("0;0;0;0;0;0;0") @db.VarChar(128)
+    weapon_keychain       String  @default("0;0;0;0;0") @db.VarChar(128)
+
+    @@unique([steamid, weapon_team, weapon_defindex], map: "steamid")
+}
