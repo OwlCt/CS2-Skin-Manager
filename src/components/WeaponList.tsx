@@ -55,7 +55,7 @@ export default function WeaponList({
   const imageBaseUrl =
     categoryRoute.toLowerCase() === "gloves"
       ? "/assets/gloves"
-      : "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/weapons/base_weapons";
+      : "https://cdn.jsdelivr.net/gh/ByMykel/counter-strike-image-tracker@main/static/panorama/images/econ/weapons/base_weapons";
 
   // Helper function to find user's configured skin for a weapon
   const getUserConfiguredSkin = (weaponKey: string, weaponSkins: any[]) => {
