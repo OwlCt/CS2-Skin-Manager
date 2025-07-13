@@ -10,8 +10,8 @@ export function loadAgents(): Agent[] {
 
 export function getAgentTeamsMap(): Record<string, string> {
   return {
-    "counter-terrorists": "CT",
-    terrorists: "T",
+    "counter-terrorists": "Counter-Terrorists",
+    terrorists: "Terrorists",
   };
 }
 
