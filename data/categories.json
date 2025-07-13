@@ -1,0 +1,79 @@
+{
+  "Gloves": [
+    "leather_handwraps",
+    "motorcycle_gloves",
+    "slick_gloves",
+    "specialist_gloves",
+    "sporty_gloves",
+    "studded_bloodhound_gloves",
+    "studded_brokenfang_gloves",
+    "studded_hydra_gloves"
+  ],
+  "Rifles": [
+    "weapon_ak47",
+    "weapon_aug",
+    "weapon_awp",
+    "weapon_famas",
+    "weapon_g3sg1",
+    "weapon_galilar",
+    "weapon_m4a1",
+    "weapon_m4a1_silencer",
+    "weapon_scar20",
+    "weapon_sg556",
+    "weapon_ssg08"
+  ],
+  "Knives": [
+    "weapon_bayonet",
+    "weapon_knife_butterfly",
+    "weapon_knife_canis",
+    "weapon_knife_cord",
+    "weapon_knife_css",
+    "weapon_knife_falchion",
+    "weapon_knife_flip",
+    "weapon_knife_gut",
+    "weapon_knife_gypsy_jackknife",
+    "weapon_knife_karambit",
+    "weapon_knife_kukri",
+    "weapon_knife_m9_bayonet",
+    "weapon_knife_outdoor",
+    "weapon_knife_push",
+    "weapon_knife_skeleton",
+    "weapon_knife_stiletto",
+    "weapon_knife_survival_bowie",
+    "weapon_knife_tactical",
+    "weapon_knife_ursus",
+    "weapon_knife_widowmaker"
+  ],
+  "SMGs": [
+    "weapon_bizon",
+    "weapon_mac10",
+    "weapon_mp5sd",
+    "weapon_mp7",
+    "weapon_mp9",
+    "weapon_p90",
+    "weapon_ump45"
+  ],
+  "Pistols": [
+    "weapon_cz75a",
+    "weapon_deagle",
+    "weapon_elite",
+    "weapon_fiveseven",
+    "weapon_glock",
+    "weapon_hkp2000",
+    "weapon_p250",
+    "weapon_revolver",
+    "weapon_tec9",
+    "weapon_usp_silencer"
+  ],
+  "Heavy": [
+    "weapon_m249",
+    "weapon_mag7",
+    "weapon_negev",
+    "weapon_nova",
+    "weapon_sawedoff",
+    "weapon_xm1014"
+  ],
+  "Equipment": [
+    "weapon_taser"
+  ]
+}

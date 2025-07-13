@@ -1,7 +1,9 @@
-import Sidebar from "@/components/Sidebar";
+// layout.tsx
+import Sidebar from "@/components/nav/Sidebar";
 import { getCategories } from "@/lib/data";
 import { getSession } from "@/lib/session";
-import Navigation from "@/components/Navigation";
+import Navigation from "@/components/nav/Navigation";
+import { getAgentTeamsMap } from "@/lib/agents";
 
 export default async function MainAppLayout({
   children,
@@ -10,15 +12,25 @@ export default async function MainAppLayout({
 }) {
   const categories = await getCategories();
   const session = await getSession();
+  const agentTeamsMap = await getAgentTeamsMap();
+  const agentTeams = Object.values(agentTeamsMap);
 
   return (
-    <div className="flex h-screen">
-      <aside className="w-64 bg-background border-r p-4 overflow-y-auto hidden md:block">
-        <Sidebar categories={categories} />
+    <div className="flex h-screen w-full bg-background">
+      {/* Sidebar - Hidden on mobile, visible on desktop */}
+      <aside
+        className="hidden lg:block shrink-0 h-full overflow-hidden"
+        style={{ width: "18rem" }}
+      >
+        <Sidebar categories={categories} agentTeams={agentTeams} />
       </aside>
-      <main className="flex-1 flex flex-col overflow-y-auto">
+
+      {/* Main content area */}
+      <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        {/* Navigation bar */}
         <Navigation
           categories={categories}
+          agentTeams={agentTeams}
           user={
             session.steamId
               ? {
@@ -29,7 +41,11 @@ export default async function MainAppLayout({
               : null
           }
         />
-        <div className="flex-1 overflow-y-auto">{children}</div>
+
+        {/* Page content */}
+        <div className="flex-1 overflow-y-auto bg-background">
+          <div className="h-full">{children}</div>
+        </div>
       </main>
     </div>
   );

@@ -1,3 +1,5 @@
+"use client";
+
 import SkinCard from "./SkinCard";
 import {
   Select,
@@ -6,31 +8,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skin } from "@/lib/types";
+import { Skins, UserSkinConfig } from "@/types/skins";
 import { ListFilter } from "lucide-react";
 
 interface SkinGridProps {
-  weaponName: string | null;
-  skins: Skin[];
-  sortKey: "default" | "name";
-  onSortChange: (key: "default" | "name") => void;
-  onConfigSave?: (skinId: string, config: any) => void;
+  skins: Skins[];
+  userConfigs: UserSkinConfig | null;
 }
 
-export default function SkinGrid({
-  weaponName,
-  skins,
-  sortKey,
-  onSortChange,
-  onConfigSave,
-}: SkinGridProps) {
+export default function SkinGrid({ skins, userConfigs }: SkinGridProps) {
+  const onSortChange = (value: "default" | "name") => {
+    // TODO: Implement sorting logic based on the selected value
+    console.log("Sort by:", value);
+  };
+
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-bold">{weaponName} Skins</h1>
+        <h1 className="text-3xl font-bold">Skins</h1>
         <div className="flex items-center gap-4">
           <Select
-            value={sortKey}
+            value="default"
             onValueChange={(value: "default" | "name") => onSortChange(value)}
           >
             <SelectTrigger className="w-full md:w-[180px]">
@@ -52,9 +50,21 @@ export default function SkinGrid({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {skins.map((skin) => (
-            <SkinCard key={skin.id} skin={skin} onConfigSave={onConfigSave} />
+            <SkinCard
+              key={skin.paint}
+              skin={skin}
+              userConfig={
+                userConfigs?.skins?.find(
+                  (config) => config.weapon_paint_id === skin.paint
+                ) && {
+                  team: userConfigs.skins.find(
+                    (config) => config.weapon_paint_id === skin.paint
+                  )!.weapon_team,
+                }
+              }
+            />
           ))}
         </div>
       )}

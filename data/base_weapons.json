@@ -1,0 +1,302 @@
+{
+  "ct_gloves": {
+    "name": "Default CT Gloves",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/ct_gloves_png.png"
+  },
+  "t_gloves": {
+    "name": "Default T Gloves",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/t_gloves_png.png"
+  },
+  "weapon_ak47": {
+    "name": "AK-47",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_ak47_png.png"
+  },
+  "weapon_aug": {
+    "name": "AUG",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_aug_png.png"
+  },
+  "weapon_awp": {
+    "name": "AWP",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_awp_png.png"
+  },
+  "weapon_bayonet": {
+    "name": "Bayonet",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_bayonet_png.png"
+  },
+  "weapon_bizon": {
+    "name": "PP-Bizon",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_bizon_png.png"
+  },
+  "weapon_c4": {
+    "name": "C4 Explosive",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_c4_png.png"
+  },
+  "weapon_cz75a": {
+    "name": "CZ75-Auto",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_cz75a_png.png"
+  },
+  "weapon_deagle": {
+    "name": "Desert Eagle",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_deagle_png.png"
+  },
+  "weapon_decoy": {
+    "name": "Decoy Grenade",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_decoy_png.png"
+  },
+  "weapon_elite": {
+    "name": "Dual Berettas",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_elite_png.png"
+  },
+  "weapon_famas": {
+    "name": "FAMAS",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_famas_png.png"
+  },
+  "weapon_fiveseven": {
+    "name": "Five-SeveN",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_fiveseven_png.png"
+  },
+  "weapon_flashbang": {
+    "name": "Flashbang",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_flashbang_png.png"
+  },
+  "weapon_g3sg1": {
+    "name": "G3SG1",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_g3sg1_png.png"
+  },
+  "weapon_galilar": {
+    "name": "Galil AR",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_galilar_png.png"
+  },
+  "weapon_glock": {
+    "name": "Glock-18",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_glock_png.png"
+  },
+  "weapon_healthshot": {
+    "name": "Medi-Shot",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_healthshot_png.png"
+  },
+  "weapon_hegrenade": {
+    "name": "High Explosive Grenade",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_hegrenade_png.png"
+  },
+  "weapon_hkp2000": {
+    "name": "P2000",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_hkp2000_png.png"
+  },
+  "weapon_incgrenade": {
+    "name": "Incendiary Grenade",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_incgrenade_png.png"
+  },
+  "weapon_knife_butterfly": {
+    "name": "Butterfly Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_butterfly_png.png"
+  },
+  "weapon_knife_canis": {
+    "name": "Survival Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_canis_png.png"
+  },
+  "weapon_knife_cord": {
+    "name": "Paracord Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_cord_png.png"
+  },
+  "weapon_knife_css": {
+    "name": "Classic Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_css_png.png"
+  },
+  "weapon_knife_falchion": {
+    "name": "Falchion Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_falchion_png.png"
+  },
+  "weapon_knife_flip": {
+    "name": "Flip Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_flip_png.png"
+  },
+  "weapon_knife_gut": {
+    "name": "Gut Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_gut_png.png"
+  },
+  "weapon_knife_gypsy_jackknife": {
+    "name": "Navaja Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_gypsy_jackknife_png.png"
+  },
+  "weapon_knife_karambit": {
+    "name": "Karambit",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_karambit_png.png"
+  },
+  "weapon_knife_kukri": {
+    "name": "Kukri Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_kukri_png.png"
+  },
+  "weapon_knife_m9_bayonet": {
+    "name": "M9 Bayonet",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_m9_bayonet_png.png"
+  },
+  "weapon_knife_outdoor": {
+    "name": "Nomad Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_outdoor_png.png"
+  },
+  "weapon_knife": {
+    "name": "Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_png.png"
+  },
+  "weapon_knife_push": {
+    "name": "Shadow Daggers",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_push_png.png"
+  },
+  "weapon_knife_skeleton": {
+    "name": "Skeleton Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_skeleton_png.png"
+  },
+  "weapon_knife_stiletto": {
+    "name": "Stiletto Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_stiletto_png.png"
+  },
+  "weapon_knife_survival_bowie": {
+    "name": "Bowie Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_survival_bowie_png.png"
+  },
+  "weapon_knife_t": {
+    "name": "Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_t_png.png"
+  },
+  "weapon_knife_tactical": {
+    "name": "Huntsman Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_tactical_png.png"
+  },
+  "weapon_knife_ursus": {
+    "name": "Ursus Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_ursus_png.png"
+  },
+  "weapon_knife_widowmaker": {
+    "name": "Talon Knife",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_knife_widowmaker_png.png"
+  },
+  "weapon_m249": {
+    "name": "M249",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_m249_png.png"
+  },
+  "weapon_m4a1": {
+    "name": "M4A4",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_m4a1_png.png"
+  },
+  "weapon_m4a1_silencer": {
+    "name": "M4A1-S",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_m4a1_silencer_png.png"
+  },
+  "weapon_mac10": {
+    "name": "MAC-10",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_mac10_png.png"
+  },
+  "weapon_mag7": {
+    "name": "MAG-7",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_mag7_png.png"
+  },
+  "weapon_molotov": {
+    "name": "Molotov",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_molotov_png.png"
+  },
+  "weapon_mp5sd": {
+    "name": "MP5-SD",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_mp5sd_png.png"
+  },
+  "weapon_mp7": {
+    "name": "MP7",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_mp7_png.png"
+  },
+  "weapon_mp9": {
+    "name": "MP9",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_mp9_png.png"
+  },
+  "weapon_negev": {
+    "name": "Negev",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_negev_png.png"
+  },
+  "weapon_nova": {
+    "name": "Nova",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_nova_png.png"
+  },
+  "weapon_p250": {
+    "name": "P250",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_p250_png.png"
+  },
+  "weapon_p90": {
+    "name": "P90",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_p90_png.png"
+  },
+  "weapon_revolver": {
+    "name": "R8 Revolver",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_revolver_png.png"
+  },
+  "weapon_sawedoff": {
+    "name": "Sawed-Off",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_sawedoff_png.png"
+  },
+  "weapon_scar20": {
+    "name": "SCAR-20",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_scar20_png.png"
+  },
+  "weapon_sg556": {
+    "name": "SG 553",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_sg556_png.png"
+  },
+  "weapon_smokegrenade": {
+    "name": "Smoke Grenade",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_smokegrenade_png.png"
+  },
+  "weapon_ssg08": {
+    "name": "SSG 08",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_ssg08_png.png"
+  },
+  "weapon_taser": {
+    "name": "Zeus x27",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_taser_png.png"
+  },
+  "weapon_tec9": {
+    "name": "Tec-9",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_tec9_png.png"
+  },
+  "weapon_ump45": {
+    "name": "UMP-45",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_ump45_png.png"
+  },
+  "weapon_usp_silencer": {
+    "name": "USP-S",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_usp_silencer_png.png"
+  },
+  "weapon_xm1014": {
+    "name": "XM1014",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/weapons/base_weapons/weapon_xm1014_png.png"
+  },
+  "leather_handwraps": {
+    "name": "Hand Wraps",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/default_generated/leather_handwraps_handwrap_camo_grey_light_png.png"
+  },
+  "motorcycle_gloves": {
+    "name": "Moto Gloves",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/default_generated/motorcycle_gloves_motorcycle_basic_black_light_png.png"
+  },
+  "slick_gloves": {
+    "name": "Driver Gloves",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/default_generated/slick_gloves_slick_black_light_png.png"
+  },
+  "specialist_gloves": {
+    "name": "Specialist Gloves",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/default_generated/specialist_gloves_specialist_ddpat_green_camo_light_png.png"
+  },
+  "sporty_gloves": {
+    "name": "Sport Gloves",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/default_generated/sporty_gloves_sporty_black_webbing_yellow_light_png.png"
+  },
+  "studded_bloodhound_gloves": {
+    "name": "Bloodhound Gloves",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/default_generated/studded_bloodhound_gloves_bloodhound_black_silver_light_png.png"
+  },
+  "studded_brokenfang_gloves": {
+    "name": "Broken Fang Gloves",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/default_generated/studded_brokenfang_gloves_operation10_floral_light_png.png"
+  },
+  "studded_hydra_gloves": {
+    "name": "Hydra Gloves",
+    "image": "https://cdn.jsdelivr.net/gh/renzynx/cs2-assets@v1.0.0/static/panorama/images/econ/default_generated/studded_hydra_gloves_bloodhound_hydra_black_green_light_png.png"
+  }
+}

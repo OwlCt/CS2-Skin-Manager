@@ -1,8 +1,7 @@
-import { getAgentsData } from "@/lib/data";
-import { notFound } from "next/navigation";
-import AppBreadcrumb from "@/components/Breadcrumb";
+import AppBreadcrumb from "@/components/nav/Breadcrumb";
 import Link from "next/link";
-import SkinView from "@/components/SkinView";
+import { getAgentsByTeam, getAgentTeamsMap } from "@/lib/agents";
+import AgentGrid from "@/components/agents/AgentGrid";
 
 interface AgentTeamPageProps {
   params: Promise<{
@@ -13,39 +12,8 @@ interface AgentTeamPageProps {
 export default async function AgentTeamPage({ params }: AgentTeamPageProps) {
   const { team } = await params;
   const teamName = decodeURIComponent(team);
-
-  const agentsData = await getAgentsData();
-
-  // Determine the correct team key and display name
-  let correctTeamKey = "";
-  let categoryDisplayName = "";
-  let weaponDisplayName = "";
-
-  if (teamName === "counter-terrorist") {
-    correctTeamKey = "Counter-Terrorist";
-    categoryDisplayName = "Counter-Terrorist Agents";
-    weaponDisplayName = "Counter-Terrorists";
-  } else if (teamName === "terrorist") {
-    correctTeamKey = "Terrorist";
-    categoryDisplayName = "Terrorist Agents";
-    weaponDisplayName = "Terrorists";
-  }
-
-  if (!correctTeamKey || !agentsData[correctTeamKey]) {
-    notFound();
-  }
-
-  const agents = agentsData[correctTeamKey];
-
-  // Transform agents to match the expected skin format
-  const agentsAsSkins = agents.map((agent: any) => ({
-    ...agent,
-    weapon: {
-      id: teamName,
-      name: weaponDisplayName,
-      type: "Agent",
-    },
-  }));
+  const agentsData = await getAgentsByTeam();
+  const agentTeamsMap = getAgentTeamsMap();
 
   return (
     <div className="p-6">
@@ -54,12 +22,13 @@ export default async function AgentTeamPage({ params }: AgentTeamPageProps) {
           <Link href="/">Home</Link>
         </AppBreadcrumb.Item>
         <AppBreadcrumb.Item>
-          <Link href={`/agents/${teamName}`}>{categoryDisplayName}</Link>
+          <Link href={`/agents/${teamName}`}>
+            {agentTeamsMap[teamName]} Agents
+          </Link>
         </AppBreadcrumb.Item>
-        <AppBreadcrumb.Item isCurrent>{weaponDisplayName}</AppBreadcrumb.Item>
       </AppBreadcrumb>
 
-      <SkinView initialSkins={agentsAsSkins} weaponName={weaponDisplayName} />
+      <AgentGrid agents={agentsData[teamName]} />
     </div>
   );
 }

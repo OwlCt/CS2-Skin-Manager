@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getSession } from "@/lib/session";
+import { z } from "zod";
 
 const prisma = new PrismaClient();
 
-// Utility function to extract model path from model_player
-const extractModelPath = (modelPlayer: string): string => {
-  // Remove "characters/models/" prefix and ".vmdl" suffix
-  const cleaned = modelPlayer
-    .replace(/^characters\/models\//, "")
-    .replace(/\.vmdl$/, "");
-  return cleaned;
-};
+// Zod schema for agent config validation
+const agentConfigSchema = z.object({
+  team: z.union([z.literal(2), z.literal(3)], {
+    message: "Team must be 2 (Terrorist) or 3 (Counter-Terrorist)",
+  }),
+  modelPlayer: z.string().min(1, "Model player is required"),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,40 +28,29 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    const { team, modelPlayer } = body;
+    // Validate request body with Zod
+    const validation = agentConfigSchema.safeParse(body);
 
-    // Validate required fields
-    if (!team || !modelPlayer) {
+    if (!validation.success) {
       return NextResponse.json(
         {
-          error: "Missing required fields: team, modelPlayer",
+          error: "Invalid request data",
+          details: validation.error.issues,
         },
         { status: 400 }
       );
     }
 
-    // Validate team value
-    if (team !== "ct" && team !== "t") {
-      return NextResponse.json(
-        {
-          error: "Invalid team value. Must be 'ct' or 't'",
-        },
-        { status: 400 }
-      );
-    }
+    const { team, modelPlayer } = validation.data;
 
-    // Extract the model path
-    const agentModel = extractModelPath(modelPlayer);
-
-    // Prepare the update data
     const updateData: any = {};
-    if (team === "ct") {
-      updateData.agent_ct = agentModel;
+
+    if (team === 3) {
+      updateData.agent_ct = modelPlayer;
     } else {
-      updateData.agent_t = agentModel;
+      updateData.agent_t = modelPlayer;
     }
 
-    // Use upsert to either create or update the agent configuration
     const result = await prisma.wp_player_agents.upsert({
       where: {
         steamid: steamid,
@@ -69,16 +58,15 @@ export async function POST(request: NextRequest) {
       update: updateData,
       create: {
         steamid: steamid,
-        agent_ct: team === "ct" ? agentModel : null,
-        agent_t: team === "t" ? agentModel : null,
+        agent_ct: team === 3 ? modelPlayer : null,
+        agent_t: team === 2 ? modelPlayer : null,
       },
     });
 
     console.log("Agent configuration saved:", {
       steamid,
       team,
-      agentModel,
-      result,
+      modelPlayer,
     });
 
     return NextResponse.json({
@@ -95,9 +83,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Get steamId from session
     const session = await getSession();
     const steamid = session?.steamId;
 

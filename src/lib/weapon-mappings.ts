@@ -1,8 +1,7 @@
-// Auto-generated weapon mappings from skins.json
-// Generated on: 2025-07-10T22:05:50.968Z
-
-// Knife defindexes and their corresponding names
-export const KNIFE_DEFINDEXES = [500, 503, 505, 506, 507, 508, 509, 512, 514, 515, 516, 517, 518, 519, 520, 521, 522, 523, 525, 526];
+export const KNIFE_DEFINDEXES = [
+  500, 503, 505, 506, 507, 508, 509, 512, 514, 515, 516, 517, 518, 519, 520,
+  521, 522, 523, 525, 526,
+];
 
 export const KNIFE_MAPPING: Record<number, string> = {
   500: "weapon_bayonet",
@@ -27,8 +26,9 @@ export const KNIFE_MAPPING: Record<number, string> = {
   526: "weapon_knife_kukri",
 };
 
-// Glove defindexes and their corresponding names  
-export const GLOVE_DEFINDEXES = [4725, 5027, 5030, 5031, 5032, 5033, 5034, 5035];
+export const GLOVE_DEFINDEXES = [
+  4725, 5027, 5030, 5031, 5032, 5033, 5034, 5035,
+];
 
 export const GLOVE_MAPPING: Record<number, string> = {
   4725: "studded_brokenfang_gloves",
@@ -41,7 +41,6 @@ export const GLOVE_MAPPING: Record<number, string> = {
   5035: "studded_hydra_gloves",
 };
 
-// Helper functions
 export const getKnifeName = (weaponDefindex: number): string => {
   return KNIFE_MAPPING[weaponDefindex] || "weapon_knife";
 };

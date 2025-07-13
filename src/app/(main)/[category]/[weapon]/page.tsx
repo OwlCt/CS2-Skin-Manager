@@ -1,8 +1,10 @@
-import { getSkinsForWeapon } from "@/lib/data";
-import SkinView from "@/components/SkinView";
+import { getSkinsForWeapon } from "@/lib/skins";
 import { notFound } from "next/navigation";
-import AppBreadcrumb from "@/components/Breadcrumb";
+import AppBreadcrumb from "@/components/nav/Breadcrumb";
 import Link from "next/link";
+import { getSession } from "@/lib/session";
+import { PrismaClient } from "@prisma/client";
+import SkinGrid from "@/components/skins/SkinGrid";
 
 interface WeaponPageProps {
   params: Promise<{
@@ -11,30 +13,53 @@ interface WeaponPageProps {
   }>;
 }
 
+async function getUserConfigs() {
+  try {
+    const prisma = new PrismaClient();
+    const session = await getSession();
+    const steamid = session?.steamId;
+
+    if (!steamid) {
+      return null;
+    }
+
+    // Get all user configurations
+    const [skins, knives, gloves] = await Promise.all([
+      prisma.wp_player_skins.findMany({
+        where: { steamid },
+        orderBy: [{ weapon_team: "asc" }, { weapon_defindex: "asc" }],
+      }),
+      prisma.wp_player_knife.findMany({
+        where: { steamid },
+      }),
+      prisma.wp_player_gloves.findMany({
+        where: { steamid },
+      }),
+    ]);
+
+    return { skins, knives, gloves };
+  } catch (error) {
+    console.error("Error fetching user configs:", error);
+    return null;
+  }
+}
+
 export default async function WeaponPage({ params }: WeaponPageProps) {
   const { category, weapon } = await params;
-  const categoryName = decodeURIComponent(category); // This is "gloves"
+  const categoryName = decodeURIComponent(category);
   const weaponKey = decodeURIComponent(weapon);
-  const initialSkins = await getSkinsForWeapon(categoryName, weaponKey);
+  const skins = await getSkinsForWeapon(weaponKey);
+  const userConfigs = await getUserConfigs();
 
-  if (!initialSkins) {
+  if (!skins) {
     notFound();
   }
 
-  // --- THE FIX ---
-  // Create a capitalized version for display purposes.
   const categoryDisplayName =
     categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
-
-  // For agents, use proper display names for teams
-  let weaponDisplayName = initialSkins[0]?.weapon?.name || weaponKey;
-  if (categoryName.toLowerCase().includes("agents")) {
-    if (weaponKey === "terrorist") {
-      weaponDisplayName = "Terrorists";
-    } else if (weaponKey === "counter-terrorist") {
-      weaponDisplayName = "Counter-Terrorists";
-    }
-  }
+  const weaponDisplayName = skins
+    .find((s) => s.weapon_name.toLowerCase() === weaponKey.toLowerCase())!
+    .paint_name.split(" | ")[0];
 
   return (
     <div className="p-6">
@@ -52,7 +77,7 @@ export default async function WeaponPage({ params }: WeaponPageProps) {
         <AppBreadcrumb.Item isCurrent>{weaponDisplayName}</AppBreadcrumb.Item>
       </AppBreadcrumb>
 
-      <SkinView initialSkins={initialSkins} weaponName={weaponDisplayName} />
+      <SkinGrid userConfigs={userConfigs} skins={skins} />
     </div>
   );
 }

@@ -9,16 +9,18 @@ export const getSkinsData = cache(async (): Promise<SkinsData> => {
   return JSON.parse(file);
 });
 
-export async function getCategories(): Promise<string[]> {
-  const data = await getSkinsData();
-  const skinCategories = Object.keys(data);
+export async function getCategories(): Promise<Record<string, string[]>> {
+  const filePath = path.join(process.cwd(), "data", "categories.json");
+  const file = await fs.readFile(filePath, "utf8");
 
-  return [
-    ...skinCategories,
-    "Counter-Terrorist Agents",
-    "Terrorist Agents",
-    "Music Kits",
-  ];
+  return JSON.parse(file);
+}
+
+export async function getBaseWeapons() {
+  const filePath = path.join(process.cwd(), "data", "base_weapons.json");
+  const file = await fs.readFile(filePath, "utf8");
+
+  return JSON.parse(file) as Record<string, Record<string, string>>;
 }
 
 export async function getWeaponsForCategory(
