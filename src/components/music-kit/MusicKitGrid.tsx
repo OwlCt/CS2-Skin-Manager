@@ -14,14 +14,10 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleMusicKitClick = async (kit: MusicKit) => {
-    if (!team) {
-      console.error("Team is required to save music kit configuration");
-      return;
-    }
-
     toast.loading("Loading...", {
       id: "musickit-loading",
     });
+
     setIsLoading(true);
     try {
       const response = await fetch("/api/music-kits/config", {
