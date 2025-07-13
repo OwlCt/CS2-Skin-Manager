@@ -1,4 +1,4 @@
-import AppBreadcrumb from "@/components/nav/Breadcrumb";
+import AppBreadcrumb, { AppBreadcrumbItem } from "@/components/nav/Breadcrumb";
 import Link from "next/link";
 import { getAgentsByTeam, getAgentTeamsMap } from "@/lib/agents";
 import AgentGrid from "@/components/agents/AgentGrid";
@@ -18,14 +18,14 @@ export default async function AgentTeamPage({ params }: AgentTeamPageProps) {
   return (
     <div className="p-6">
       <AppBreadcrumb>
-        <AppBreadcrumb.Item>
+        <AppBreadcrumbItem>
           <Link href="/">Home</Link>
-        </AppBreadcrumb.Item>
-        <AppBreadcrumb.Item>
+        </AppBreadcrumbItem>
+        <AppBreadcrumbItem>
           <Link href={`/agents/${teamName}`}>
             {agentTeamsMap[teamName]} Agents
           </Link>
-        </AppBreadcrumb.Item>
+        </AppBreadcrumbItem>
       </AppBreadcrumb>
 
       <AgentGrid agents={agentsData[teamName]} />

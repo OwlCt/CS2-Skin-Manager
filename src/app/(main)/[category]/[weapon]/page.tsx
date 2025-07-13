@@ -1,6 +1,6 @@
 import { getSkinsForWeapon } from "@/lib/skins";
 import { notFound } from "next/navigation";
-import AppBreadcrumb from "@/components/nav/Breadcrumb";
+import AppBreadcrumb, { AppBreadcrumbItem } from "@/components/nav/Breadcrumb";
 import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { PrismaClient } from "@prisma/client";
@@ -64,17 +64,17 @@ export default async function WeaponPage({ params }: WeaponPageProps) {
   return (
     <div className="p-6">
       <AppBreadcrumb>
-        <AppBreadcrumb.Item>
+        <AppBreadcrumbItem>
           <Link href="/">Home</Link>
-        </AppBreadcrumb.Item>
-        <AppBreadcrumb.Item>
+        </AppBreadcrumbItem>
+        <AppBreadcrumbItem>
           {/* Use the lowercase 'categoryName' for the URL */}
           <Link href={`/${categoryName}`}>
             {/* Use the capitalized 'categoryDisplayName' for the text */}
             {categoryDisplayName}
           </Link>
-        </AppBreadcrumb.Item>
-        <AppBreadcrumb.Item isCurrent>{weaponDisplayName}</AppBreadcrumb.Item>
+        </AppBreadcrumbItem>
+        <AppBreadcrumbItem isCurrent>{weaponDisplayName}</AppBreadcrumbItem>
       </AppBreadcrumb>
 
       <SkinGrid userConfigs={userConfigs} skins={skins} />

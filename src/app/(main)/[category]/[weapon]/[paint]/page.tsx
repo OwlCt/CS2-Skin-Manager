@@ -1,4 +1,4 @@
-import AppBreadcrumb from "@/components/nav/Breadcrumb";
+import AppBreadcrumb, { AppBreadcrumbItem } from "@/components/nav/Breadcrumb";
 import PaintUI from "@/components/skins/PaintUI";
 import { getSkinByPaintId } from "@/lib/skins";
 import Link from "next/link";
@@ -23,20 +23,20 @@ export default async function Paint({ params }: PaintProps) {
   return (
     <div className="p-6 flex flex-col gap-6">
       <AppBreadcrumb>
-        <AppBreadcrumb.Item>
+        <AppBreadcrumbItem>
           <Link href="/">Home</Link>
-        </AppBreadcrumb.Item>
-        <AppBreadcrumb.Item>
+        </AppBreadcrumbItem>
+        <AppBreadcrumbItem>
           <Link href={`/${category}`}>{skin.category}</Link>
-        </AppBreadcrumb.Item>
-        <AppBreadcrumb.Item>
+        </AppBreadcrumbItem>
+        <AppBreadcrumbItem>
           <Link href={`/${category}/${weapon}`}>
             {skin.paint_name.split("|")[0]}
           </Link>
-        </AppBreadcrumb.Item>
-        <AppBreadcrumb.Item isCurrent>
+        </AppBreadcrumbItem>
+        <AppBreadcrumbItem isCurrent>
           {skin.paint_name.split("|")[1]} {skin.phase ? `(${skin.phase})` : ""}
-        </AppBreadcrumb.Item>
+        </AppBreadcrumbItem>
       </AppBreadcrumb>
 
       <PaintUI skin={skin} />

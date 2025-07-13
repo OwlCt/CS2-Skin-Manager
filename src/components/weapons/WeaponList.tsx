@@ -1,7 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import WeaponCard from "./WeaponCard";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Search } from "lucide-react";
 
 interface WeaponListProps {
   categoryName: string;
@@ -16,33 +19,108 @@ export default function WeaponList({
   categoryRoute,
   baseWeapons,
 }: WeaponListProps) {
-  const weaponsDisplay = useMemo(() => {
-    if (!baseWeapons) return null;
+  const [searchQuery, setSearchQuery] = useState("");
 
-    return weapons.map((weapon) => {
-      const weaponData = baseWeapons[weapon];
+  // Process weapon data
+  const processedWeapons = useMemo(() => {
+    if (!baseWeapons) return [];
 
-      if (!weaponData) return false;
+    return weapons
+      .map((weapon) => {
+        const weaponData = baseWeapons[weapon];
+        if (!weaponData) return null;
 
-      return (
-        <WeaponCard
-          key={weapon}
-          weaponKey={weapon}
-          displayName={weaponData.name}
-          imagePath={weaponData.image}
-          categoryRoute={categoryRoute}
-        />
-      );
-    });
-  }, [weapons, categoryRoute]);
+        return {
+          key: weapon,
+          displayName: weaponData.name,
+          imagePath: weaponData.image,
+          searchText: weaponData.name.toLowerCase(),
+        };
+      })
+      .filter(Boolean);
+  }, [weapons, baseWeapons]);
+
+  // Filter weapons based on search
+  const filteredWeapons = useMemo(() => {
+    if (!searchQuery.trim()) return processedWeapons;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return processedWeapons.filter(weapon => 
+      weapon?.searchText.includes(query)
+    );
+  }, [processedWeapons, searchQuery]);
+
+  // Loading state
+  if (!baseWeapons) {
+    return (
+      <div className="space-y-6">
+        <div className="h-8 bg-muted/20 rounded animate-pulse" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="aspect-square bg-muted/20 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-6 capitalize">{categoryName}</h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">{categoryName}</h1>
+            <Badge variant="secondary">
+              {filteredWeapons.length} weapon{filteredWeapons.length !== 1 ? 's' : ''}
+            </Badge>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {weaponsDisplay}
+        {/* Search */}
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder={`Search ${categoryName.toLowerCase()}...`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </div>
+
+      {/* Weapons Grid */}
+      {filteredWeapons.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {filteredWeapons.map((weapon) => {
+            if (!weapon) return null;
+            
+            return (
+              <WeaponCard
+                key={weapon.key}
+                weaponKey={weapon.key}
+                displayName={weapon.displayName}
+                imagePath={weapon.imagePath}
+                categoryRoute={categoryRoute}
+              />
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="w-16 h-16 mb-4 rounded-full bg-muted/20 flex items-center justify-center">
+            <Search className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">No weapons found</h3>
+          <p className="text-muted-foreground">
+            {searchQuery 
+              ? `No weapons match your search "${searchQuery}".`
+              : "No weapons are available in this category."
+            }
+          </p>
+        </div>
+      )}
     </div>
   );
 }
