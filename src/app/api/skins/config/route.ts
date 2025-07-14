@@ -1,5 +1,5 @@
 import { getSession } from "@/lib/session";
-import { getKnifeName, isGlove, isKnife } from "@/lib/weapon-mappings";
+import { getKnifeName, isGlove, isKnife } from "@/lib/weapons";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -52,95 +52,94 @@ export async function POST(request: NextRequest) {
       stattrakCount,
     } = parseResult.data;
 
-    // Use parsed values directly
     const isKnifeWeapon = isKnife(weaponDefindex);
     const isGloveWeapon = isGlove(weaponDefindex);
 
+    const teams = weaponTeam === 0 ? [2, 3] : [weaponTeam];
+
     if (isKnifeWeapon) {
-      const knifeResults = [];
-      const knifeData = {
-        steamid,
-        weapon_team: weaponTeam,
-        knife: getKnifeName(weaponDefindex),
-      };
-      const knifeResult = await prisma.wp_player_knife.upsert({
-        where: {
-          steamid_weapon_team: {
-            steamid,
-            weapon_team: weaponTeam,
+      for (const team of teams) {
+        const knifeData = {
+          steamid,
+          weapon_team: team,
+          knife: getKnifeName(weaponDefindex),
+        };
+        await prisma.wp_player_knife.upsert({
+          where: {
+            steamid_weapon_team: {
+              steamid,
+              weapon_team: team,
+            },
           },
-        },
-        update: {
-          knife: knifeData.knife,
-        },
-        create: knifeData,
-      });
-      knifeResults.push(knifeResult);
+          update: knifeData,
+          create: knifeData,
+        });
+      }
     }
 
     if (isGloveWeapon) {
-      const gloveResults = [];
-      const gloveData = {
-        steamid,
-        weapon_team: weaponTeam,
-        weapon_defindex: weaponDefindex,
-      };
-      const gloveResult = await prisma.wp_player_gloves.upsert({
-        where: {
-          steamid_weapon_team: {
-            steamid,
-            weapon_team: weaponTeam,
+      for (const team of teams) {
+        const gloveData = {
+          steamid,
+          weapon_team: team,
+          weapon_defindex: weaponDefindex,
+        };
+        await prisma.wp_player_gloves.upsert({
+          where: {
+            steamid_weapon_team: {
+              steamid,
+              weapon_team: team,
+            },
           },
-        },
-        update: {
-          weapon_defindex: gloveData.weapon_defindex,
-        },
-        create: gloveData,
-      });
-      gloveResults.push(gloveResult);
+          update: gloveData,
+          create: gloveData,
+        });
+      }
     }
 
-    const skinData = {
-      steamid,
-      weapon_team: weaponTeam,
-      weapon_defindex: weaponDefindex,
-      weapon_paint_id: weaponPaintId,
-      weapon_wear: wear,
-      weapon_seed: parseInt(seed) || 0,
-      weapon_nametag: nametag || null,
-      weapon_stattrak: Boolean(stattrak) || false,
-      weapon_stattrak_count: parseInt(stattrakCount ?? "0") || 0,
-      weapon_sticker_0: "0;0;0;0;0;0;0",
-      weapon_sticker_1: "0;0;0;0;0;0;0",
-      weapon_sticker_2: "0;0;0;0;0;0;0",
-      weapon_sticker_3: "0;0;0;0;0;0;0",
-      weapon_sticker_4: "0;0;0;0;0;0;0",
-      weapon_keychain: "0;0;0;0;0",
-    };
-
-    await prisma.wp_player_skins.upsert({
-      where: {
-        steamid_weapon_team_weapon_defindex: {
-          steamid,
-          weapon_team: weaponTeam,
-          weapon_defindex: weaponDefindex,
-        },
-      },
-      update: {
+    for (const team of teams) {
+      const skinData = {
+        steamid,
+        weapon_team: team,
+        weapon_defindex: weaponDefindex,
         weapon_paint_id: weaponPaintId,
         weapon_wear: wear,
         weapon_seed: parseInt(seed) || 0,
         weapon_nametag: nametag || null,
         weapon_stattrak: Boolean(stattrak) || false,
         weapon_stattrak_count: parseInt(stattrakCount ?? "0") || 0,
-      },
-      create: skinData,
-    });
+        weapon_sticker_0: "0;0;0;0;0;0;0",
+        weapon_sticker_1: "0;0;0;0;0;0;0",
+        weapon_sticker_2: "0;0;0;0;0;0;0",
+        weapon_sticker_3: "0;0;0;0;0;0;0",
+        weapon_sticker_4: "0;0;0;0;0;0;0",
+        weapon_keychain: "0;0;0;0;0",
+      };
+
+      await prisma.wp_player_skins.upsert({
+        where: {
+          steamid_weapon_team_weapon_defindex: {
+            steamid,
+            weapon_team: team,
+            weapon_defindex: weaponDefindex,
+          },
+        },
+        update: {
+          weapon_paint_id: weaponPaintId,
+          weapon_wear: wear,
+          weapon_seed: parseInt(seed) || 0,
+          weapon_nametag: nametag || null,
+          weapon_stattrak: Boolean(stattrak) || false,
+          weapon_stattrak_count: parseInt(stattrakCount ?? "0") || 0,
+        },
+        create: skinData,
+      });
+    }
 
     return NextResponse.json(
       {
         message: "Skin configuration saved successfully",
-        affectedTeams: weaponTeam,
+        affectedTeams: teams,
       },
       { status: 200 }
     );

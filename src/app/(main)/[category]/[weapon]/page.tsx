@@ -1,10 +1,11 @@
-import { getSkinsForWeapon } from "@/lib/skins";
+import { getSkinsForWeapon } from "@/lib/data";
 import { notFound } from "next/navigation";
 import AppBreadcrumb, { AppBreadcrumbItem } from "@/components/nav/Breadcrumb";
 import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { PrismaClient } from "@prisma/client";
 import SkinGrid from "@/components/skins/SkinGrid";
+import ScrollToHash from "@/components/skins/ScrollToHash";
 
 interface WeaponPageProps {
   params: Promise<{
@@ -77,6 +78,7 @@ export default async function WeaponPage({ params }: WeaponPageProps) {
         <AppBreadcrumbItem isCurrent>{weaponDisplayName}</AppBreadcrumbItem>
       </AppBreadcrumb>
 
+      <ScrollToHash />
       <SkinGrid userConfigs={userConfigs} skins={skins} />
     </div>
   );

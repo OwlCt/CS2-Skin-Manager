@@ -1,6 +1,6 @@
 import AppBreadcrumb, { AppBreadcrumbItem } from "@/components/nav/Breadcrumb";
 import Link from "next/link";
-import { getAgentsByTeam, getAgentTeamsMap } from "@/lib/agents";
+import { getAgentsByTeam, getAgentTeamsMap } from "@/lib/data";
 import AgentGrid from "@/components/agents/AgentGrid";
 
 interface AgentTeamPageProps {

@@ -1,6 +1,6 @@
 import MusicKitGrid from "@/components/music-kit/MusicKitGrid";
 import AppBreadcrumb, { AppBreadcrumbItem } from "@/components/nav/Breadcrumb";
-import { getMusicKits } from "@/lib/music-kit";
+import { getMusicKits } from "@/lib/data";
 import Link from "next/link";
 
 export default async function MusicKitsPage() {

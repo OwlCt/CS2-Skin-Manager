@@ -3,7 +3,14 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
-import { useState, useRef, useEffect, ReactNode, useCallback, memo } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  ReactNode,
+  useCallback,
+  memo,
+} from "react";
 import CTLogo from "@/assets/ct_logo.svg";
 import TLogo from "@/assets/t_logo.svg";
 
@@ -18,6 +25,8 @@ interface BaseCardProps {
   team?: number;
   priority?: boolean;
   className?: string;
+  isHighlighted?: boolean;
+  "data-card"?: string;
 }
 
 // Animation variants for better performance
@@ -30,24 +39,43 @@ const ANIMATION_VARIANTS = {
       zIndex: 10,
     },
     tap: { scale: 0.98 },
+    highlighted: {
+      scale: 1.05,
+      boxShadow: `0 0 0 3px rgba(34,197,94,0.4), 0 0 30px rgba(34,197,94,0.3), 0 20px 60px -12px rgba(0,0,0,0.25)`,
+      border: "2px solid rgba(34,197,94,0.6)",
+      zIndex: 20,
+    },
   },
   overlay: {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      background: "linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 50%, rgba(236,72,153,0.08) 100%)",
+      background:
+        "linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 50%, rgba(236,72,153,0.08) 100%)",
+    },
+    highlighted: {
+      opacity: 1,
+      background:
+        "linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(59,130,246,0.1) 50%, rgba(34,197,94,0.15) 100%)",
     },
   },
   shimmer: {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%)",
+      background:
+        "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%)",
+    },
+    highlighted: {
+      opacity: 1,
+      background:
+        "linear-gradient(105deg, transparent 40%, rgba(34,197,94,0.2) 50%, transparent 60%)",
     },
   },
   image: {
     hover: { scale: 1.05, rotate: -0.5, y: -2 },
     rest: { scale: 1, rotate: 0, y: 0 },
+    highlighted: { scale: 1.02, rotate: 0, y: -1 },
   },
   nameBar: {
     hover: {
@@ -57,6 +85,10 @@ const ANIMATION_VARIANTS = {
     rest: {
       background: "rgba(30, 32, 40, 0.45)",
       backdropFilter: "blur(8px)",
+    },
+    highlighted: {
+      background: "rgba(34, 197, 94, 0.2)",
+      backdropFilter: "blur(12px)",
     },
   },
 } as const;
@@ -97,33 +129,32 @@ const FloatingParticles = memo<{ isVisible: boolean }>(({ isVisible }) => (
   </AnimatePresence>
 ));
 
-FloatingParticles.displayName = 'FloatingParticles';
+const TeamIcon = memo<{ team: number; isHovering: boolean }>(
+  ({ team, isHovering }) => {
+    if (!team || (team !== 2 && team !== 3)) return null;
 
-// Memoized team icon component
-const TeamIcon = memo<{ team: number; isHovering: boolean }>(({ team, isHovering }) => {
-  if (!team || (team !== 2 && team !== 3)) return null;
+    return (
+      <motion.div
+        className="absolute top-2 left-2 w-8 h-8 flex items-center justify-center rounded-full bg-background/20 backdrop-blur-sm"
+        animate={{
+          scale: isHovering ? 1.1 : 1,
+          opacity: isHovering ? 1 : 0.8,
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        <Image
+          src={team === 2 ? TLogo : CTLogo}
+          alt={team === 2 ? "Terrorist" : "Counter-Terrorist"}
+          width={24}
+          height={24}
+          className="object-contain"
+        />
+      </motion.div>
+    );
+  }
+);
 
-  return (
-    <motion.div
-      className="absolute top-2 left-2 w-8 h-8 flex items-center justify-center rounded-full bg-background/20 backdrop-blur-sm"
-      animate={{
-        scale: isHovering ? 1.1 : 1,
-        opacity: isHovering ? 1 : 0.8,
-      }}
-      transition={{ duration: 0.3 }}
-    >
-      <Image
-        src={team === 2 ? TLogo : CTLogo}
-        alt={team === 2 ? "Terrorist" : "Counter-Terrorist"}
-        width={24}
-        height={24}
-        className="object-contain"
-      />
-    </motion.div>
-  );
-});
-
-TeamIcon.displayName = 'TeamIcon';
+TeamIcon.displayName = "TeamIcon";
 
 // Memoized loading skeleton
 const LoadingSkeleton = memo(() => (
@@ -142,8 +173,6 @@ const LoadingSkeleton = memo(() => (
   </motion.div>
 ));
 
-LoadingSkeleton.displayName = 'LoadingSkeleton';
-
 export default memo<BaseCardProps>(function BaseCard({
   imageSrc,
   alt,
@@ -155,6 +184,8 @@ export default memo<BaseCardProps>(function BaseCard({
   team,
   priority = false,
   className = "",
+  isHighlighted = false,
+  "data-card": dataCard,
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -183,12 +214,15 @@ export default memo<BaseCardProps>(function BaseCard({
     onClick?.();
   }, [onClick]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onClick?.();
-    }
-  }, [onClick]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onClick?.();
+      }
+    },
+    [onClick]
+  );
 
   return (
     <motion.div
@@ -206,7 +240,8 @@ export default memo<BaseCardProps>(function BaseCard({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       variants={ANIMATION_VARIANTS.card}
-      whileHover="hover"
+      animate={isHighlighted ? "highlighted" : undefined}
+      whileHover={!isHighlighted ? "hover" : undefined}
       whileTap="tap"
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       onMouseEnter={handleMouseEnter}
@@ -217,7 +252,9 @@ export default memo<BaseCardProps>(function BaseCard({
         className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-xl"
         variants={ANIMATION_VARIANTS.overlay}
         initial="hidden"
-        animate={isHovering ? "visible" : "hidden"}
+        animate={
+          isHighlighted ? "highlighted" : isHovering ? "visible" : "hidden"
+        }
         transition={{ duration: 0.6 }}
       />
 
@@ -226,12 +263,14 @@ export default memo<BaseCardProps>(function BaseCard({
         className="absolute inset-0 rounded-xl"
         variants={ANIMATION_VARIANTS.shimmer}
         initial="hidden"
-        animate={isHovering ? "visible" : "hidden"}
+        animate={
+          isHighlighted ? "highlighted" : isHovering ? "visible" : "hidden"
+        }
         transition={{ duration: 0.3 }}
       />
 
       {/* Floating particles effect */}
-      <FloatingParticles isVisible={isHovering} />
+      <FloatingParticles isVisible={isHovering || isHighlighted} />
 
       {/* Main image container */}
       <motion.div
@@ -245,7 +284,9 @@ export default memo<BaseCardProps>(function BaseCard({
         <motion.div
           className="absolute inset-0 rounded-t-xl"
           animate={{
-            boxShadow: isHovering
+            boxShadow: isHighlighted
+              ? "inset 0 0 40px rgba(34,197,94,0.15)"
+              : isHovering
               ? "inset 0 0 30px rgba(96,165,250,0.1)"
               : "inset 0 0 0px rgba(96,165,250,0.05)",
           }}
@@ -257,7 +298,9 @@ export default memo<BaseCardProps>(function BaseCard({
           className="absolute inset-0 flex items-center justify-center w-full h-full"
           style={{ pointerEvents: "none" }}
           variants={ANIMATION_VARIANTS.image}
-          animate={isHovering ? "hover" : "rest"}
+          animate={
+            isHighlighted ? "highlighted" : isHovering ? "hover" : "rest"
+          }
           transition={{ type: "spring", stiffness: 200, damping: 15 }}
         >
           <Image
@@ -272,7 +315,7 @@ export default memo<BaseCardProps>(function BaseCard({
             onLoad={handleImageLoad}
             priority={priority}
           />
-          
+
           {/* Loading skeleton */}
           {!isLoaded && <LoadingSkeleton />}
         </motion.div>
@@ -288,7 +331,7 @@ export default memo<BaseCardProps>(function BaseCard({
       <motion.div
         className="relative backdrop-blur-sm bg-gradient-to-r from-background/60 via-background/80 to-background/60 border-t border-white/5 rounded-b-xl"
         variants={ANIMATION_VARIANTS.nameBar}
-        animate={isHovering ? "hover" : "rest"}
+        animate={isHighlighted ? "highlighted" : isHovering ? "hover" : "rest"}
         transition={{ duration: 0.3 }}
       >
         {nameBar}
@@ -298,8 +341,11 @@ export default memo<BaseCardProps>(function BaseCard({
       <motion.div
         className="absolute top-2 right-2 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20"
         animate={{
-          opacity: isHovering ? 1 : 0,
-          scale: isHovering ? 1 : 0.8,
+          opacity: isHighlighted || isHovering ? 1 : 0,
+          scale: isHighlighted || isHovering ? 1 : 0.8,
+          background: isHighlighted
+            ? "linear-gradient(135deg, rgba(34,197,94,0.3), rgba(34,197,94,0.1))"
+            : "linear-gradient(135deg, rgba(59,130,246,0.2), rgba(147,51,234,0.2))",
         }}
         transition={{ duration: 0.3 }}
       />

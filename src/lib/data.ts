@@ -1,13 +1,48 @@
 import { promises as fs } from "node:fs";
+import { Agent } from "@/types/agent";
 import path from "node:path";
-import { cache } from "react";
-import type { SkinsData, WeaponData, WeaponSkins } from "./types";
+import { MusicKit } from "@/types/music-kit";
+import { Skins } from "@/types/skins";
 
-export const getSkinsData = cache(async (): Promise<SkinsData> => {
-  const filePath = path.join(process.cwd(), "public", "skins.json");
+export async function getSkinsData(): Promise<Skins[]> {
+  const filePath = path.join(process.cwd(), "data", "skins.json");
   const file = await fs.readFile(filePath, "utf8");
   return JSON.parse(file);
-});
+}
+
+export async function getWeaponsForCategory(
+  category: string
+): Promise<string[]> {
+  const data = await getSkinsData();
+  const categoryData = data.filter(
+    (skin) => skin.category.toLowerCase() === category.toLowerCase()
+  );
+
+  const uniqueNames = new Set<string>();
+
+  for (const skin of categoryData) {
+    uniqueNames.add(skin.weapon_name);
+  }
+
+  return Array.from(uniqueNames);
+}
+
+export async function getSkinsForWeapon(weaponKey: string): Promise<Skins[]> {
+  const data = await getSkinsData();
+  return data.filter(
+    (skin) =>
+      skin.weapon_name.toLowerCase() === weaponKey.toLowerCase() &&
+      !skin.weapon_name.startsWith("sfui")
+  );
+}
+
+export async function getSkinByPaintId(
+  weaponKey: string,
+  paintId: number
+): Promise<Skins | null> {
+  const skins = await getSkinsForWeapon(weaponKey);
+  return skins.find((skin) => skin.paint === paintId) || null;
+}
 
 export async function getCategories(): Promise<Record<string, string[]>> {
   const filePath = path.join(process.cwd(), "data", "categories.json");
@@ -23,237 +58,40 @@ export async function getBaseWeapons() {
   return JSON.parse(file) as Record<string, Record<string, string>>;
 }
 
-export async function getWeaponsForCategory(
-  category: string
-): Promise<WeaponData | null> {
-  // Handle Music Kits category specially - they don't have sub-weapons
-  if (category.toLowerCase() === "music kits") {
-    return null; // Music kits are handled directly in their own page
-  }
-
-  // Handle Agent categories specially
-  if (category.toLowerCase().includes("agents")) {
-    const agentsData = await getAgentsData();
-
-    // Determine which team based on the category
-    let teamName = "";
-    if (category.toLowerCase().includes("counter-terrorist")) {
-      teamName = "Counter-Terrorist";
-    } else if (category.toLowerCase().includes("terrorist")) {
-      teamName = "Terrorist";
-    }
-
-    if (teamName && agentsData[teamName]) {
-      // Return agents as a single "weapon" for the category
-      const agentsAsWeapons: any = {};
-      const agents = agentsData[teamName] as any[];
-
-      // Use the correct weapon key for routing
-      let weaponKey = "";
-      let displayName = "";
-      if (teamName === "Terrorist") {
-        weaponKey = "terrorist";
-        displayName = "Terrorists";
-      } else {
-        weaponKey = "counter-terrorist";
-        displayName = "Counter-Terrorists";
-      }
-
-      // Add the weapon property to each agent for display
-      const agentsWithWeapon = agents.map((agent: any) => ({
-        ...agent,
-        weapon: {
-          name: displayName,
-        },
-      }));
-
-      agentsAsWeapons[weaponKey] = agentsWithWeapon;
-      return agentsAsWeapons;
-    }
-
-    return null;
-  }
-
-  // Handle regular weapon categories
-  const data = await getSkinsData();
-  const correctKey = Object.keys(data).find(
-    (key) => key.toLowerCase() === category.toLowerCase()
-  );
-
-  return correctKey ? data[correctKey] : null;
+export async function loadAgents(): Promise<Agent[]> {
+  const agentsPath = path.resolve(process.cwd(), "data/agents.json");
+  const raw = await fs.readFile(agentsPath, "utf-8");
+  return JSON.parse(raw);
 }
 
-export async function getSkinsForWeapon(
-  category: string,
-  weapon: string
-): Promise<WeaponSkins | null> {
-  // Handle music kits category specially
-  if (category.toLowerCase() === "music kits") {
-    const musicKitsData = await getMusicKitsData();
+export function getAgentTeamsMap(): Record<string, string> {
+  return {
+    "counter-terrorists": "Counter-Terrorists",
+    terrorists: "Terrorists",
+  };
+}
 
-    // Filter out music kits that only have an image property
-    const validMusicKits = musicKitsData.filter(
-      (kit: any) => kit.id && kit.name
-    );
+export async function getAgentsByTeam(): Promise<Record<string, Agent[]>> {
+  const agents = await loadAgents();
+  // Team numbers: 2 = T, 3 = CT
+  const teamMap: Record<string, Agent[]> = {
+    terrorists: [],
+    "counter-terrorists": [],
+  };
 
-    // Transform music kit data to include weapon property
-    const musicKits = validMusicKits.map((kit: any) => ({
-      ...kit,
-      weapon: {
-        id: "music-kits",
-        name: "Music Kits",
-        type: "MusicKit",
-      },
-    }));
-    return musicKits as any;
-  }
-
-  // Handle agents category specially
-  if (category.toLowerCase().includes("agents")) {
-    const agentsData = await getAgentsData();
-
-    // Determine team based on weapon parameter
-    let teamName = "";
-    let displayName = "";
-    if (weapon === "terrorist") {
-      teamName = "Terrorist";
-      displayName = "Terrorists";
-    } else if (weapon === "counter-terrorist") {
-      teamName = "Counter-Terrorist";
-      displayName = "Counter-Terrorists";
-    }
-
-    if (teamName && agentsData[teamName]) {
-      // Transform agent data to include weapon property
-      const agents = agentsData[teamName].map((agent: any) => ({
-        ...agent,
-        weapon: {
-          id: weapon,
-          name: displayName,
-          type: "Agent",
-        },
-      }));
-      return agents as any;
-    }
-    return null;
-  }
-
-  // Handle regular weapon categories
-  const data = await getSkinsData();
-  const correctCategoryKey = Object.keys(data).find(
-    (key) => key.toLowerCase() === category.toLowerCase()
-  );
-
-  if (correctCategoryKey) {
-    const categoryData = data[correctCategoryKey];
-    if (categoryData?.[weapon]) {
-      return categoryData[weapon];
+  for (const agent of agents) {
+    if (agent.team === 2) {
+      teamMap.terrorists.push(agent);
+    } else {
+      teamMap["counter-terrorists"].push(agent);
     }
   }
-  return null;
+
+  return teamMap;
 }
 
-export async function getAllSkinNames(): Promise<string[]> {
-  const data = await getSkinsData();
-  const skinNames: string[] = [];
-
-  Object.values(data).forEach((category) => {
-    Object.values(category).forEach((weaponSkins) => {
-      weaponSkins.forEach((skin) => {
-        skinNames.push(skin.name);
-      });
-    });
-  });
-
-  return [...new Set(skinNames)]; // Remove duplicates
-}
-
-export async function getAllSkinsForSearch(): Promise<
-  Array<{
-    name: string;
-    image: string;
-    category: string;
-    weapon: string;
-    rarity: string;
-    rarityColor: string;
-    id: string;
-  }>
-> {
-  const data = await getSkinsData();
-  const skins: Array<{
-    name: string;
-    image: string;
-    category: string;
-    weapon: string;
-    rarity: string;
-    rarityColor: string;
-    id: string;
-  }> = [];
-
-  Object.entries(data).forEach(([categoryName, category]) => {
-    Object.entries(category).forEach(([weaponName, weaponSkins]) => {
-      weaponSkins.forEach((skin) => {
-        skins.push({
-          name: skin.name,
-          image: skin.image,
-          category: categoryName,
-          weapon: weaponName,
-          rarity: skin.rarity.name,
-          rarityColor: skin.rarity.color,
-          id: skin.id,
-        });
-      });
-    });
-  });
-
-  return skins;
-}
-
-export async function searchSkins(
-  query: string
-): Promise<{ skin: any; category: string; weapon: string }[]> {
-  const data = await getSkinsData();
-  const results: { skin: any; category: string; weapon: string }[] = [];
-
-  Object.entries(data).forEach(([categoryName, category]) => {
-    Object.entries(category).forEach(([weaponName, weaponSkins]) => {
-      weaponSkins.forEach((skin) => {
-        if (skin.name.toLowerCase().includes(query.toLowerCase())) {
-          results.push({
-            skin,
-            category: categoryName,
-            weapon: weaponName,
-          });
-        }
-      });
-    });
-  });
-
-  return results;
-}
-
-export const getAgentsData = cache(async () => {
-  const filePath = path.join(process.cwd(), "public", "agents.json");
-  const file = await fs.readFile(filePath, "utf8");
-  return JSON.parse(file);
-});
-
-export const getMusicKitsData = cache(async () => {
-  const filePath = path.join(process.cwd(), "public", "music_kits.json");
-  const file = await fs.readFile(filePath, "utf8");
-  return JSON.parse(file);
-});
-
-export async function getAgentTeams(): Promise<string[]> {
-  const data = await getAgentsData();
-  return Object.keys(data);
-}
-
-export async function getAgentsForTeam(team: string) {
-  const data = await getAgentsData();
-  const correctKey = Object.keys(data).find(
-    (key) => key.toLowerCase() === team.toLowerCase()
-  );
-
-  return correctKey ? data[correctKey] : null;
+export async function getMusicKits(): Promise<MusicKit[]> {
+  const kitsPath = path.join(process.cwd(), "data/music_kits.json");
+  const raw = await fs.readFile(kitsPath, "utf-8");
+  return JSON.parse(raw);
 }
