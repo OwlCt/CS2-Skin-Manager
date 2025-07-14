@@ -1,6 +1,6 @@
 import AppBreadcrumb, { AppBreadcrumbItem } from "@/components/nav/Breadcrumb";
 import PaintUI from "@/components/skins/PaintUI";
-import { getSkinByPaintId } from "@/lib/skins";
+import { getSkinByPaintId } from "@/lib/data";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
