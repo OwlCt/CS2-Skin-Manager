@@ -1,9 +1,9 @@
 ### WeaponPaints UI
 
-![Preview](.github/previews/0.png)
-![Preview](.github/previews/1.png)
-![Preview](.github/previews/2.png)
-![Preview](.github/previews/3.png)
+![Preview](previews/0.png)
+![Preview](previews/1.png)
+![Preview](previews/2.png)
+![Preview](previews/3.png)
 
 ### FYI
 
