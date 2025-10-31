@@ -13,8 +13,8 @@ const syne = Syne({
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "WeaponPaints Skin Changer",
-  description: "A skin changer for WeaponPaints",
+  title: process.env.NEXT_PUBLIC_SITE_TITLE || "CS2 Community Server - Skins Control Panel",
+  description: "CS2 Community Server - Manage your weapon skins and configurations",
 };
 
 export default async function RootLayout({
