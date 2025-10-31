@@ -3,6 +3,8 @@ import { Agent } from "@/types/agent";
 import path from "node:path";
 import { MusicKit } from "@/types/music-kit";
 import { Skins } from "@/types/skins";
+import { Sticker } from "@/types/sticker";
+import { Keychain } from "@/types/keychain";
 
 export async function getSkinsData(): Promise<Skins[]> {
   const filePath = path.join(process.cwd(), "data", "skins.json");
@@ -93,5 +95,17 @@ export async function getAgentsByTeam(): Promise<Record<string, Agent[]>> {
 export async function getMusicKits(): Promise<MusicKit[]> {
   const kitsPath = path.join(process.cwd(), "data/music_kits.json");
   const raw = await fs.readFile(kitsPath, "utf-8");
+  return JSON.parse(raw);
+}
+
+export async function getStickers(): Promise<Sticker[]> {
+  const stickersPath = path.join(process.cwd(), "data/stickers.json");
+  const raw = await fs.readFile(stickersPath, "utf-8");
+  return JSON.parse(raw);
+}
+
+export async function getKeychains(): Promise<Keychain[]> {
+  const keychainsPath = path.join(process.cwd(), "data/keychains.json");
+  const raw = await fs.readFile(keychainsPath, "utf-8");
   return JSON.parse(raw);
 }

@@ -1,6 +1,6 @@
 import AppBreadcrumb, { AppBreadcrumbItem } from "@/components/nav/Breadcrumb";
 import PaintUI from "@/components/skins/PaintUI";
-import { getSkinByPaintId } from "@/lib/data";
+import { getSkinByPaintId, getStickers, getKeychains } from "@/lib/data";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -14,7 +14,11 @@ type PaintProps = {
 
 export default async function Paint({ params }: PaintProps) {
   const { paint, category, weapon } = await params;
-  const skin = await getSkinByPaintId(weapon, parseInt(paint, 10));
+  const [skin, stickers, keychains] = await Promise.all([
+    getSkinByPaintId(weapon, parseInt(paint, 10)),
+    getStickers(),
+    getKeychains(),
+  ]);
 
   if (!skin) {
     return notFound();
@@ -39,7 +43,7 @@ export default async function Paint({ params }: PaintProps) {
         </AppBreadcrumbItem>
       </AppBreadcrumb>
 
-      <PaintUI skin={skin} />
+      <PaintUI skin={skin} stickers={stickers} keychains={keychains} />
     </div>
   );
 }

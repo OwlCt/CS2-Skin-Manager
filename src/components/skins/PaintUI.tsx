@@ -1,6 +1,8 @@
 "use client";
 
 import { Skins } from "@/types/skins";
+import { Sticker } from "@/types/sticker";
+import { Keychain } from "@/types/keychain";
 import { motion } from "framer-motion";
 import { Settings, Star, Tag, Target, Zap } from "lucide-react";
 import { useState } from "react";
@@ -16,6 +18,8 @@ import { toast } from "sonner";
 import { MotionSelect } from "@/components/ui/motion-select";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import StickerSelector from "@/components/skins/StickerSelector";
+import KeychainSelector from "@/components/skins/KeychainSelector";
 
 // Animation variants
 const containerVariants = {
@@ -30,7 +34,15 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
-export default function PaintUI({ skin }: { skin: Skins }) {
+export default function PaintUI({
+  skin,
+  stickers,
+  keychains,
+}: {
+  skin: Skins;
+  stickers: Sticker[];
+  keychains: Keychain[];
+}) {
   const [selectedWear, setSelectedWear] = useState("Factory New");
   const [seedRange, setSeedRange] = useState(500);
   const [nameTag, setNameTag] = useState("");
@@ -39,6 +51,19 @@ export default function PaintUI({ skin }: { skin: Skins }) {
   const [activeTab, setActiveTab] = useState("T");
   const [saveLoading, setSaveLoading] = useState(false);
   const router = useRouter();
+
+  // Stickers state (5 slots)
+  const [selectedStickers, setSelectedStickers] = useState<
+    (Sticker | null)[]
+  >([null, null, null, null, null]);
+  const [stickerDialogOpen, setStickerDialogOpen] = useState(false);
+  const [currentStickerSlot, setCurrentStickerSlot] = useState<number>(0);
+
+  // Keychain state (1 slot)
+  const [selectedKeychain, setSelectedKeychain] = useState<Keychain | null>(
+    null
+  );
+  const [keychainDialogOpen, setKeychainDialogOpen] = useState(false);
 
   const wearOptions = [
     "Factory New",
@@ -59,6 +84,30 @@ export default function PaintUI({ skin }: { skin: Skins }) {
     if (tab === "T") return 2;
     if (tab === "CT") return 3;
     return 0;
+  }
+
+  function handleOpenStickerDialog(slotIndex: number) {
+    setCurrentStickerSlot(slotIndex);
+    setStickerDialogOpen(true);
+  }
+
+  function handleSelectSticker(sticker: Sticker | null) {
+    const newStickers = [...selectedStickers];
+    newStickers[currentStickerSlot] = sticker;
+    setSelectedStickers(newStickers);
+  }
+
+  function formatStickerForDatabase(sticker: Sticker | null): string {
+    if (!sticker) return "0;0;0;0;0;0;0";
+    // Format: defIndex;wear;rotation;x;y;scale;tint
+    // Using default values for now, these could be customizable in the future
+    return `${sticker.def_index};0;0;0;0;1;0`;
+  }
+
+  function formatKeychainForDatabase(keychain: Keychain | null): string {
+    if (!keychain) return "0;0;0;0;0";
+    // Format: defIndex;pattern;seed;offset_x;offset_y
+    return `${keychain.def_index};0;0;0;0`;
   }
 
   async function handleSaveConfig() {
@@ -83,6 +132,8 @@ export default function PaintUI({ skin }: { skin: Skins }) {
           nametag: nameTag,
           stattrak: statTrak,
           stattrakCount: kills.toString(),
+          stickers: selectedStickers.map(formatStickerForDatabase),
+          keychain: formatKeychainForDatabase(selectedKeychain),
         }),
       });
 
@@ -343,24 +394,75 @@ export default function PaintUI({ skin }: { skin: Skins }) {
                       Stickers
                     </label>
                     <div className="flex gap-1 md:gap-2 flex-wrap">
-                      {[...Array(5)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="w-9 h-9 md:w-10 md:h-10 bg-muted/40 rounded-md flex items-center justify-center text-lg md:text-xl text-muted-foreground"
-                        >
-                          +
-                        </div>
+                      {selectedStickers.map((sticker, i) => (
+                        <Tooltip key={i}>
+                          <TooltipTrigger asChild>
+                            <motion.button
+                              type="button"
+                              onClick={() => handleOpenStickerDialog(i)}
+                              className="w-12 h-12 md:w-14 md:h-14 bg-muted/40 rounded-md border border-border hover:border-primary/50 transition-all flex items-center justify-center overflow-hidden"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              {sticker ? (
+                                <Image
+                                  src={sticker.image}
+                                  alt={sticker.name}
+                                  width={40}
+                                  height={40}
+                                  className="object-contain"
+                                />
+                              ) : (
+                                <span className="text-lg md:text-xl text-muted-foreground">
+                                  +
+                                </span>
+                              )}
+                            </motion.button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {sticker
+                              ? sticker.name.replace("Sticker | ", "")
+                              : `Add sticker to slot ${i + 1}`}
+                          </TooltipContent>
+                        </Tooltip>
                       ))}
                     </div>
                   </div>
                   <div className="flex-1">
                     <label className="text-lg font-medium text-foreground mb-3 block">
-                      Keychains
+                      Keychain
                     </label>
                     <div className="flex gap-1 md:gap-2 flex-wrap">
-                      <div className="w-9 h-9 md:w-10 md:h-10 bg-muted/40 rounded-md flex items-center justify-center text-lg md:text-xl text-muted-foreground">
-                        +
-                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <motion.button
+                            type="button"
+                            onClick={() => setKeychainDialogOpen(true)}
+                            className="w-12 h-12 md:w-14 md:h-14 bg-muted/40 rounded-md border border-border hover:border-primary/50 transition-all flex items-center justify-center overflow-hidden"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {selectedKeychain ? (
+                              <Image
+                                src={selectedKeychain.image}
+                                alt={selectedKeychain.name}
+                                width={40}
+                                height={40}
+                                className="object-contain"
+                              />
+                            ) : (
+                              <span className="text-lg md:text-xl text-muted-foreground">
+                                +
+                              </span>
+                            )}
+                          </motion.button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {selectedKeychain
+                            ? selectedKeychain.name.replace("Charm | ", "")
+                            : "Add keychain"}
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                   </div>
                 </motion.div>
@@ -369,6 +471,23 @@ export default function PaintUI({ skin }: { skin: Skins }) {
           </motion.div>
         </div>
       </motion.div>
+
+      {/* Sticker Selector Dialog */}
+      <StickerSelector
+        open={stickerDialogOpen}
+        onOpenChange={setStickerDialogOpen}
+        onSelect={handleSelectSticker}
+        stickers={stickers}
+      />
+
+      {/* Keychain Selector Dialog */}
+      <KeychainSelector
+        open={keychainDialogOpen}
+        onOpenChange={setKeychainDialogOpen}
+        onSelect={setSelectedKeychain}
+        keychains={keychains}
+      />
+
       <style jsx>{`
         .slider::-webkit-slider-thumb {
           appearance: none;

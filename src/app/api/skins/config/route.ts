@@ -29,6 +29,8 @@ export async function POST(request: NextRequest) {
       nametag: z.string().optional().nullable(),
       stattrak: z.union([z.string(), z.boolean()]).optional(),
       stattrakCount: z.string().optional(),
+      stickers: z.array(z.string()).length(5).optional(),
+      keychain: z.string().optional(),
     });
 
     const parseResult = configSchema.safeParse(body);
@@ -50,6 +52,8 @@ export async function POST(request: NextRequest) {
       nametag,
       stattrak,
       stattrakCount,
+      stickers,
+      keychain,
     } = parseResult.data;
 
     const isKnifeWeapon = isKnife(weaponDefindex);
@@ -108,12 +112,12 @@ export async function POST(request: NextRequest) {
         weapon_nametag: nametag || null,
         weapon_stattrak: Boolean(stattrak) || false,
         weapon_stattrak_count: parseInt(stattrakCount ?? "0") || 0,
-        weapon_sticker_0: "0;0;0;0;0;0;0",
-        weapon_sticker_1: "0;0;0;0;0;0;0",
-        weapon_sticker_2: "0;0;0;0;0;0;0",
-        weapon_sticker_3: "0;0;0;0;0;0;0",
-        weapon_sticker_4: "0;0;0;0;0;0;0",
-        weapon_keychain: "0;0;0;0;0",
+        weapon_sticker_0: stickers?.[0] || "0;0;0;0;0;0;0",
+        weapon_sticker_1: stickers?.[1] || "0;0;0;0;0;0;0",
+        weapon_sticker_2: stickers?.[2] || "0;0;0;0;0;0;0",
+        weapon_sticker_3: stickers?.[3] || "0;0;0;0;0;0;0",
+        weapon_sticker_4: stickers?.[4] || "0;0;0;0;0;0;0",
+        weapon_keychain: keychain || "0;0;0;0;0",
       };
 
       await prisma.wp_player_skins.upsert({
@@ -131,6 +135,12 @@ export async function POST(request: NextRequest) {
           weapon_nametag: nametag || null,
           weapon_stattrak: Boolean(stattrak) || false,
           weapon_stattrak_count: parseInt(stattrakCount ?? "0") || 0,
+          weapon_sticker_0: stickers?.[0] || "0;0;0;0;0;0;0",
+          weapon_sticker_1: stickers?.[1] || "0;0;0;0;0;0;0",
+          weapon_sticker_2: stickers?.[2] || "0;0;0;0;0;0;0",
+          weapon_sticker_3: stickers?.[3] || "0;0;0;0;0;0;0",
+          weapon_sticker_4: stickers?.[4] || "0;0;0;0;0;0;0",
+          weapon_keychain: keychain || "0;0;0;0;0",
         },
         create: skinData,
       });
