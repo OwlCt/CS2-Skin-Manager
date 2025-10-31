@@ -33,7 +33,7 @@ function transformAgentsData(apiAgents) {
   return apiAgents.map((agent) => ({
     team: convertTeamId(agent.team?.id),
     image: agent.image,
-    model: agent.model,
+    model: agent.model_player,
     agent_name: agent.name,
   }));
 }

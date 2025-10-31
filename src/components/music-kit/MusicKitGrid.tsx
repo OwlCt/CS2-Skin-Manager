@@ -42,7 +42,7 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
         },
         body: JSON.stringify({
           team: 0, // For now update for both teams until i have a better way to handle this
-          defIndex: kit.id,
+          defIndex: kit.def_index,
         }),
       });
 

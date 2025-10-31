@@ -51,9 +51,11 @@ export default function AgentGrid({ agents }: AgentGridProps) {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Agent config error:", errorData);
 
         toast.error(errorData.error || "Failed to save agent configuration", {
           id: "agent-loading",
+          description: errorData.details ? JSON.stringify(errorData.details) : undefined,
         });
 
         return;

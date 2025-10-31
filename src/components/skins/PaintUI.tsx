@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import StickerSelector from "@/components/skins/StickerSelector";
 import KeychainSelector from "@/components/skins/KeychainSelector";
+import { isKnife, isGlove } from "@/lib/weapons";
 
 // Animation variants
 const containerVariants = {
@@ -43,6 +44,16 @@ export default function PaintUI({
   stickers: Sticker[];
   keychains: Keychain[];
 }) {
+  // Determine weapon type
+  const weaponDefindex = skin.weapon_defindex;
+  const isKnifeWeapon = isKnife(weaponDefindex);
+  const isGloveWeapon = isGlove(weaponDefindex);
+
+  // Feature availability based on weapon type
+  const canHaveStickers = !isKnifeWeapon && !isGloveWeapon;
+  const canHaveKeychains = !isKnifeWeapon && !isGloveWeapon;
+  const canHaveStatTrak = !isGloveWeapon;
+
   const [selectedWear, setSelectedWear] = useState("Factory New");
   const [seedRange, setSeedRange] = useState(500);
   const [nameTag, setNameTag] = useState("");
@@ -130,10 +141,17 @@ export default function PaintUI({
           wear: wearValues[selectedWear],
           seed: seedRange.toString(),
           nametag: nameTag,
-          stattrak: statTrak,
-          stattrakCount: kills.toString(),
-          stickers: selectedStickers.map(formatStickerForDatabase),
-          keychain: formatKeychainForDatabase(selectedKeychain),
+          // Only send StatTrak if weapon supports it (not gloves)
+          stattrak: canHaveStatTrak ? statTrak : false,
+          stattrakCount: canHaveStatTrak ? kills.toString() : "0",
+          // Only send stickers if weapon supports them (not knives or gloves)
+          stickers: canHaveStickers
+            ? selectedStickers.map(formatStickerForDatabase)
+            : ["0;0;0;0;0;0;0", "0;0;0;0;0;0;0", "0;0;0;0;0;0;0", "0;0;0;0;0;0;0", "0;0;0;0;0;0;0"],
+          // Only send keychain if weapon supports it (not knives or gloves)
+          keychain: canHaveKeychains
+            ? formatKeychainForDatabase(selectedKeychain)
+            : "0;0;0;0;0",
         }),
       });
 
@@ -346,147 +364,159 @@ export default function PaintUI({
                     whileFocus={{ scale: 1.02 }}
                   />
                 </motion.div>
-                {/* StatTrak & Kills */}
-                <motion.div variants={itemVariants}>
-                  <div className="flex gap-6">
-                    <div className="flex-1">
-                      <label className="flex items-center gap-2 text-lg font-medium text-foreground mb-3">
-                        <Target className="w-5 h-5 text-red-400" />
-                        StatTrak
-                      </label>
-                      <motion.button
-                        onClick={() => setStatTrak(!statTrak)}
-                        className={`w-full py-3 rounded-xl font-medium transition-all duration-300 ${
-                          statTrak
-                            ? "bg-primary text-primary-foreground border-primary shadow"
-                            : "bg-muted/40 backdrop-blur-md border-border text-muted-foreground"
-                        }`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {statTrak ? "ON" : "OFF"}
-                      </motion.button>
+                {/* StatTrak & Kills - Only for weapons and knives (not gloves) */}
+                {canHaveStatTrak && (
+                  <motion.div variants={itemVariants}>
+                    <div className="flex gap-6">
+                      <div className="flex-1">
+                        <label className="flex items-center gap-2 text-lg font-medium text-foreground mb-3">
+                          <Target className="w-5 h-5 text-red-400" />
+                          StatTrak
+                        </label>
+                        <motion.button
+                          onClick={() => setStatTrak(!statTrak)}
+                          className={`w-full py-3 rounded-xl font-medium transition-all duration-300 ${
+                            statTrak
+                              ? "bg-primary text-primary-foreground border-primary shadow"
+                              : "bg-muted/40 backdrop-blur-md border-border text-muted-foreground"
+                          }`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {statTrak ? "ON" : "OFF"}
+                        </motion.button>
+                      </div>
+                      <div className="flex-1">
+                        <label className="text-lg font-medium text-foreground mb-3 block">
+                          Kills
+                        </label>
+                        <motion.input
+                          type="number"
+                          value={kills}
+                          onChange={(e) =>
+                            setKills(parseInt(e.target.value) || 0)
+                          }
+                          className="w-full bg-muted/40 backdrop-blur-md border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                          disabled={!statTrak}
+                          whileFocus={{ scale: 1.02 }}
+                        />
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <label className="text-lg font-medium text-foreground mb-3 block">
-                        Kills
-                      </label>
-                      <motion.input
-                        type="number"
-                        value={kills}
-                        onChange={(e) =>
-                          setKills(parseInt(e.target.value) || 0)
-                        }
-                        className="w-full bg-muted/40 backdrop-blur-md border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                        disabled={!statTrak}
-                        whileFocus={{ scale: 1.02 }}
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-                {/* Stickers & Keychains */}
-                <motion.div
-                  variants={itemVariants}
-                  className="flex flex-col md:flex-row gap-6 md:gap-12 mt-6 md:mt-8"
-                >
-                  <div className="flex-1">
-                    <label className="text-lg font-medium text-foreground mb-3 block">
-                      Stickers
-                    </label>
-                    <div className="flex gap-1 md:gap-2 flex-wrap">
-                      {selectedStickers.map((sticker, i) => (
-                        <Tooltip key={i}>
-                          <TooltipTrigger asChild>
-                            <motion.button
-                              type="button"
-                              onClick={() => handleOpenStickerDialog(i)}
-                              className="w-12 h-12 md:w-14 md:h-14 bg-muted/40 rounded-md border border-border hover:border-primary/50 transition-all flex items-center justify-center overflow-hidden"
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              {sticker ? (
-                                <Image
-                                  src={sticker.image}
-                                  alt={sticker.name}
-                                  width={40}
-                                  height={40}
-                                  className="object-contain"
-                                />
-                              ) : (
-                                <span className="text-lg md:text-xl text-muted-foreground">
-                                  +
-                                </span>
-                              )}
-                            </motion.button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {sticker
-                              ? sticker.name.replace("Sticker | ", "")
-                              : `Add sticker to slot ${i + 1}`}
-                          </TooltipContent>
-                        </Tooltip>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-lg font-medium text-foreground mb-3 block">
-                      Keychain
-                    </label>
-                    <div className="flex gap-1 md:gap-2 flex-wrap">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <motion.button
-                            type="button"
-                            onClick={() => setKeychainDialogOpen(true)}
-                            className="w-12 h-12 md:w-14 md:h-14 bg-muted/40 rounded-md border border-border hover:border-primary/50 transition-all flex items-center justify-center overflow-hidden"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            {selectedKeychain ? (
-                              <Image
-                                src={selectedKeychain.image}
-                                alt={selectedKeychain.name}
-                                width={40}
-                                height={40}
-                                className="object-contain"
-                              />
-                            ) : (
-                              <span className="text-lg md:text-xl text-muted-foreground">
-                                +
-                              </span>
-                            )}
-                          </motion.button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {selectedKeychain
-                            ? selectedKeychain.name.replace("Charm | ", "")
-                            : "Add keychain"}
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                )}
+                {/* Stickers & Keychains - Only for regular weapons (not knives or gloves) */}
+                {(canHaveStickers || canHaveKeychains) && (
+                  <motion.div
+                    variants={itemVariants}
+                    className="flex flex-col md:flex-row gap-6 md:gap-12 mt-6 md:mt-8"
+                  >
+                    {canHaveStickers && (
+                      <div className="flex-1">
+                        <label className="text-lg font-medium text-foreground mb-3 block">
+                          Stickers
+                        </label>
+                        <div className="flex gap-1 md:gap-2 flex-wrap">
+                          {selectedStickers.map((sticker, i) => (
+                            <Tooltip key={i}>
+                              <TooltipTrigger asChild>
+                                <motion.button
+                                  type="button"
+                                  onClick={() => handleOpenStickerDialog(i)}
+                                  className="w-12 h-12 md:w-14 md:h-14 bg-muted/40 rounded-md border border-border hover:border-primary/50 transition-all flex items-center justify-center overflow-hidden"
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  {sticker ? (
+                                    <Image
+                                      src={sticker.image}
+                                      alt={sticker.name}
+                                      width={40}
+                                      height={40}
+                                      className="object-contain"
+                                    />
+                                  ) : (
+                                    <span className="text-lg md:text-xl text-muted-foreground">
+                                      +
+                                    </span>
+                                  )}
+                                </motion.button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {sticker
+                                  ? sticker.name.replace("Sticker | ", "")
+                                  : `Add sticker to slot ${i + 1}`}
+                              </TooltipContent>
+                            </Tooltip>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {canHaveKeychains && (
+                      <div className="flex-1">
+                        <label className="text-lg font-medium text-foreground mb-3 block">
+                          Keychain
+                        </label>
+                        <div className="flex gap-1 md:gap-2 flex-wrap">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <motion.button
+                                type="button"
+                                onClick={() => setKeychainDialogOpen(true)}
+                                className="w-12 h-12 md:w-14 md:h-14 bg-muted/40 rounded-md border border-border hover:border-primary/50 transition-all flex items-center justify-center overflow-hidden"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                {selectedKeychain ? (
+                                  <Image
+                                    src={selectedKeychain.image}
+                                    alt={selectedKeychain.name}
+                                    width={40}
+                                    height={40}
+                                    className="object-contain"
+                                  />
+                                ) : (
+                                  <span className="text-lg md:text-xl text-muted-foreground">
+                                    +
+                                  </span>
+                                )}
+                              </motion.button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {selectedKeychain
+                                ? selectedKeychain.name.replace("Charm | ", "")
+                                : "Add keychain"}
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
               </div>
             </div>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Sticker Selector Dialog */}
-      <StickerSelector
-        open={stickerDialogOpen}
-        onOpenChange={setStickerDialogOpen}
-        onSelect={handleSelectSticker}
-        stickers={stickers}
-      />
+      {/* Sticker Selector Dialog - Only for regular weapons */}
+      {canHaveStickers && (
+        <StickerSelector
+          open={stickerDialogOpen}
+          onOpenChange={setStickerDialogOpen}
+          onSelect={handleSelectSticker}
+          stickers={stickers}
+        />
+      )}
 
-      {/* Keychain Selector Dialog */}
-      <KeychainSelector
-        open={keychainDialogOpen}
-        onOpenChange={setKeychainDialogOpen}
-        onSelect={setSelectedKeychain}
-        keychains={keychains}
-      />
+      {/* Keychain Selector Dialog - Only for regular weapons */}
+      {canHaveKeychains && (
+        <KeychainSelector
+          open={keychainDialogOpen}
+          onOpenChange={setKeychainDialogOpen}
+          onSelect={setSelectedKeychain}
+          keychains={keychains}
+        />
+      )}
 
       <style jsx>{`
         .slider::-webkit-slider-thumb {
