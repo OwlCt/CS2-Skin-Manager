@@ -12,12 +12,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import type { SessionData } from "@/lib/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface UserNavProps {
   user: SessionData;
 }
 
 export default function UserNav({ user }: UserNavProps) {
+  const { t } = useLanguage();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -41,7 +44,7 @@ export default function UserNav({ user }: UserNavProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/api/auth/logout">Log out</Link>
+          <Link href="/api/auth/logout">{t("nav.logout")}</Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

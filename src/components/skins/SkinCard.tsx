@@ -4,6 +4,7 @@ import BaseCard from "@/components/ui/BaseCard";
 import { Skins } from "@/types/skins";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface SkinCardProps {
   skin: Skins;
@@ -16,6 +17,7 @@ export default function SkinCard({ skin, userConfig }: SkinCardProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isHighlighted, setIsHighlighted] = useState(false);
+  const { getPatternName, loading } = useTranslation();
   console.log(userConfig);
 
   useEffect(() => {
@@ -64,7 +66,10 @@ export default function SkinCard({ skin, userConfig }: SkinCardProps) {
               className="text-sm font-medium truncate text-center w-full transition-colors"
               style={{ color: "#cbd5e1" }}
             >
-              {skin.paint_name.replace("★ ", "").split(" | ")[1]}{" "}
+              {loading
+                ? (skin.paint_name.replace("★ ", "").split(" | ")[1])
+                : (getPatternName(skin.paint, skin.weapon_defindex) || skin.paint_name.replace("★ ", "").split(" | ")[1])
+              }{" "}
               {skin.phase ? `(${skin.phase})` : ""}
             </p>
           </div>

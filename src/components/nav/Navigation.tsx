@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserNav from "@/components/nav/UserNav";
+import LanguageSwitcher from "@/components/nav/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Suspense, lazy } from "react";
 const MobileMenu = lazy(() => import("@/components/nav/MobileMenu"));
 import SearchCommand from "@/components/nav/SearchCommand";
@@ -24,6 +26,7 @@ export default function Navigation({
   agentTeams,
 }: NavigationProps) {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
 
   // Keyboard shortcut to open search (no changes here)
   useEffect(() => {
@@ -62,7 +65,7 @@ export default function Navigation({
               onClick={() => setOpen(true)}
             >
               <Search className="mr-2 h-4 w-4" />
-              Search skins...
+              {t("nav.search")}
               <kbd className="pointer-events-none absolute right-1.5 top-1.5 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
                 <span className="text-xs">⌘</span>K
               </kbd>
@@ -78,6 +81,7 @@ export default function Navigation({
         </div>
 
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           {user && <UserNav user={user} />}
         </div>
       </header>

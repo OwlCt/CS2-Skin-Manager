@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Agent } from "@/types/agent";
 import BaseCard from "@/components/ui/BaseCard";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { createAgentTranslationMap } from "@/lib/translation-mapping";
 
 type AgentGridProps = {
   agents: Agent[];
@@ -15,6 +17,27 @@ type AgentGridProps = {
 export default function AgentGrid({ agents }: AgentGridProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { language } = useLanguage();
+  const [translationMap, setTranslationMap] = useState<Map<string, string>>(new Map());
+
+  // Load translations when language changes
+  useEffect(() => {
+    async function loadTranslations() {
+      try {
+        const response = await fetch(`/data/translations/${language}.json`);
+        const data = await response.json();
+
+        if (data.agents) {
+          const map = await createAgentTranslationMap(agents, data.agents, language);
+          setTranslationMap(map);
+        }
+      } catch (error) {
+        console.error("Failed to load agent translations:", error);
+      }
+    }
+
+    loadTranslations();
+  }, [language, agents]);
 
   // Filter agents based on search
   const filteredAgents = useMemo(() => {
@@ -124,7 +147,7 @@ export default function AgentGrid({ agents }: AgentGridProps) {
                     className="text-sm font-medium truncate text-center w-full transition-colors"
                     style={{ color: "#cbd5e1" }}
                   >
-                    {agent.agent_name}
+                    {translationMap.get(agent.agent_name) || agent.agent_name}
                   </p>
                   {isLoading && (
                     <div className="text-xs text-center text-muted-foreground mt-1">

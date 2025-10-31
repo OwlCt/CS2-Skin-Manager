@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "bun db:generate && next start",
     "lint": "next lint",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "translations:update": "node scripts/fetch-translations.js"
   },
   "dependencies": {
     "@prisma/client": "^6.11.1",

@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import BaseCard from "@/components/ui/BaseCard";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MusicKit } from "@/types/music-kit";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { createMusicKitTranslationMap } from "@/lib/translation-mapping";
 
 type MusicKitGridProps = {
   kits: MusicKit[];
@@ -16,6 +18,27 @@ type MusicKitGridProps = {
 const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { language } = useLanguage();
+  const [translationMap, setTranslationMap] = useState<Map<number, string>>(new Map());
+
+  // Load translations when language changes
+  useEffect(() => {
+    async function loadTranslations() {
+      try {
+        const response = await fetch(`/data/translations/${language}.json`);
+        const data = await response.json();
+
+        if (data.music_kits) {
+          const map = createMusicKitTranslationMap(kits, data.music_kits);
+          setTranslationMap(map);
+        }
+      } catch (error) {
+        console.error("Failed to load music kit translations:", error);
+      }
+    }
+
+    loadTranslations();
+  }, [language, kits]);
 
   // Filter music kits based on search
   const filteredKits = useMemo(() => {
@@ -121,9 +144,13 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
                     className="text-sm font-medium truncate text-center w-full transition-colors"
                     style={{ color: "#cbd5e1" }}
                   >
-                    {kit.name.includes("|")
-                      ? kit.name.split("|")[1].trim()
-                      : kit.name}
+                    {(() => {
+                      const translatedName = translationMap.get(kit.id);
+                      const displayName = translatedName || kit.name;
+                      return displayName.includes("|")
+                        ? displayName.split("|")[1].trim()
+                        : displayName;
+                    })()}
                   </p>
                   {isLoading && (
                     <div className="text-xs text-center text-muted-foreground mt-1">

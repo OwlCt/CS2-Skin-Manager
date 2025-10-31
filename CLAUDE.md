@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js 15 web application for managing Counter-Strike 2 weapon skins, gloves, knives, agents, and music kits. Users authenticate via Steam OpenID and can configure their in-game cosmetics through a web interface. The application persists user configurations to a MySQL database, which is read by a CS2 game server plugin.
+This is a Next.js 15 web application for managing Counter-Strike 2 weapon skins, gloves, knives, agents, and music kits with full multilingual support (English and Simplified Chinese). Users authenticate via Steam OpenID and can configure their in-game cosmetics through a web interface. The application persists user configurations to a MySQL database, which is read by a CS2 game server plugin.
 
 ## Tech Stack
 
@@ -33,6 +33,9 @@ bun run lint
 
 # Generate Prisma client after schema changes
 bun run db:generate
+
+# Update translations (when CS2 adds new items)
+bun run translations:update
 ```
 
 ## Database Architecture
@@ -136,8 +139,39 @@ The `scripts/` directory contains Node.js scripts to extract game data from CS2 
 - `extract-weapon-mappings.js`: Extracts weapon skins data to `data/skins.json`
 - `extract-agents.js`: Extracts agent data to `data/agents.json`
 - `extract-music-kits.js`: Extracts music kit data to `data/music_kits.json`
+- `fetch-translations.js`: Fetches multilingual translations from CSGO-API to `public/data/translations/`
 
 These are run manually when CS2 game data is updated and should not be part of the build process.
+
+## Internationalization (i18n)
+
+The application supports multiple languages with automatic translation of all game content:
+
+### Supported Languages
+- English (en)
+- Simplified Chinese (zh-CN)
+
+### Translation Architecture
+
+**Translation Data**: Stored in `public/data/translations/{language}.json` (~6MB per language)
+- Sourced from [CSGO-API](https://github.com/ByMykel/CSGO-API)
+- Contains translations for 2000+ skins, 60+ agents, 170+ music kits
+
+**Key Files**:
+- `src/contexts/LanguageContext.tsx`: Language state management with localStorage persistence
+- `src/hooks/useTranslation.ts`: Client-side translation hook for game data
+- `src/lib/translation-mapping.ts`: Mapping utilities to match local data with API translations
+- `src/components/nav/LanguageSwitcher.tsx`: Language switcher UI component
+
+**Translation Mapping Strategy**:
+- **Skins**: Match by `paint_index` + `weapon_defindex`
+- **Agents**: Match via English name bridge to ID, then to target language
+- **Music Kits**: Match by `id`
+
+**Adding Translations**:
+When CS2 adds new items, run `bun run translations:update` to fetch latest translations. See `TRANSLATION_UPDATE.md` for detailed instructions.
+
+**UI Translations**: UI strings (buttons, labels, etc.) are defined in `LanguageContext.tsx` and accessed via the `t()` function.
 
 ## Type Definitions
 

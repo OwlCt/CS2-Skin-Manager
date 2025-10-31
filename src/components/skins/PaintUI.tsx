@@ -21,6 +21,8 @@ import Image from "next/image";
 import StickerSelector from "@/components/skins/StickerSelector";
 import KeychainSelector from "@/components/skins/KeychainSelector";
 import { isKnife, isGlove } from "@/lib/weapons";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Animation variants
 const containerVariants = {
@@ -44,6 +46,10 @@ export default function PaintUI({
   stickers: Sticker[];
   keychains: Keychain[];
 }) {
+  // Translation hooks
+  const { getSkinName, getWearName, loading: translationLoading } = useTranslation();
+  const { t } = useLanguage();
+
   // Determine weapon type
   const weaponDefindex = skin.weapon_defindex;
   const isKnifeWeapon = isKnife(weaponDefindex);
@@ -200,7 +206,10 @@ export default function PaintUI({
               <div className="absolute inset-0 bg-primary/20 rounded-full blur opacity-40" />
               <div className="relative bg-muted/40 backdrop-blur-md border border-border rounded-full px-6 py-3">
                 <h4 className="text-foreground text-xl font-bold">
-                  {skin.paint_name} {skin.phase ? `(${skin.phase})` : ""}
+                  {translationLoading
+                    ? skin.paint_name
+                    : (getSkinName(skin.paint, skin.weapon_defindex) || skin.paint_name)
+                  } {skin.phase ? `(${skin.phase})` : ""}
                 </h4>
               </div>
             </motion.div>
