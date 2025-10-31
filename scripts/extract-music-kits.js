@@ -54,7 +54,7 @@ async function filterAndWriteMusicKits() {
     const fileContent = JSON.stringify(nonStatTrakKits, null, 2);
 
     // 4. Write the new JSON to a file
-    const outputPath = path.join(process.cwd(), "public", OUTPUT_FILE_NAME);
+    const outputPath = path.join(process.cwd(), "data", OUTPUT_FILE_NAME);
     console.log(`Writing filtered data to ${outputPath}...`);
 
     await fs.writeFile(outputPath, fileContent, "utf8");

@@ -25,48 +25,34 @@ async function fetchSkinsData() {
 }
 
 /**
- * Filters out items that are internal HUD elements and not actual skins.
- * @param {ApiSkin[]} skins - The raw array of skin objects from the API.
- * @returns {ApiSkin[]} A new array of skin objects with HUD items removed.
+ * Converts team string ID to numeric ID
+ * @param {string} teamId - "both", "t", "ct", etc.
+ * @returns {number} - 0 for both, 2 for T, 3 for CT
  */
-function filterOutHudItems(skins) {
-  // This correctly removes vanilla weapon entries by checking the weapon's own ID
-  return skins.filter((skin) => !skin.weapon.id.startsWith("sfui_wpnhud_"));
+function convertTeamId(teamId) {
+  if (!teamId || teamId === "both") return 0;
+  if (teamId === "t") return 2;
+  if (teamId === "ct") return 3;
+  return 0;
 }
 
 /**
- * Removes the 'crates' property from an array of skins.
- * @param {ApiSkin[]} skins
- * @returns {ProcessedSkin[]}
+ * Transforms API skin data to match the app's expected format
  */
-function removeCratesFromSkins(skins) {
-  return skins.map((skin) => {
-    const { crates, ...skinWithoutCrates } = skin;
-    return skinWithoutCrates;
-  });
-}
-
-/**
- * Categorizes skins into a nested object by class and then by weapon ID.
- * @param {ProcessedSkin[]} skins
- * @returns {SuperCategorizedSkins}
- */
-function categorizeSkinsByClassAndWeapon(skins) {
-  return skins.reduce((accumulator, currentSkin) => {
-    const weaponClass = currentSkin.category.name; // e.g., "Rifle", "Pistol", "Gloves"
-    const weaponId = currentSkin.weapon.id; // e.g., "weapon_ak47", "weapon_glock"
-
-    if (!accumulator[weaponClass]) {
-      accumulator[weaponClass] = {};
-    }
-
-    if (!accumulator[weaponClass][weaponId]) {
-      accumulator[weaponClass][weaponId] = [];
-    }
-
-    accumulator[weaponClass][weaponId].push(currentSkin);
-    return accumulator;
-  }, {});
+function transformSkinsData(apiSkins) {
+  return apiSkins
+    .filter((skin) => !skin.weapon.id.startsWith("sfui_wpnhud_")) // Filter out HUD items
+    .map((skin) => ({
+      weapon_defindex: Number(skin.weapon.weapon_id || skin.id),
+      weapon_name: skin.weapon.id,
+      paint: skin.paint_index !== null ? Number(skin.paint_index) : null,
+      image: skin.image,
+      paint_name: skin.name,
+      legacy_model: Boolean(skin.legacy_model),
+      team: convertTeamId(skin.team?.id),
+      category: skin.category?.name || "Unknown",
+      ...(skin.phase && { phase: skin.phase }),
+    }));
 }
 
 // =================================================================
@@ -109,46 +95,39 @@ function categorizeWeapon(weaponId, weaponName) {
 }
 
 /**
- * Generates and writes the weapon-mappings.ts file from categorized skin data.
- * @param {SuperCategorizedSkins} categorizedSkins - The processed, nested skin data object.
+ * Generates and writes the weapon-mappings.ts file from skin data.
  */
-async function generateMappings(categorizedSkins) {
+async function generateMappings(skins) {
   console.log("[Phase 2] Starting weapon mapping generation...");
 
   const knifeMap = new Map();
   const gloveMap = new Map();
   const weaponMap = new Map();
 
-  // Iterate through the categorized data structure
-  Object.values(categorizedSkins).forEach((weaponIdGroup) => {
-    Object.values(weaponIdGroup).forEach((skinsArray) => {
-      if (skinsArray.length === 0) return;
+  // Process each skin to build mappings
+  for (const skin of skins) {
+    const weaponId = skin.weapon_name;
+    const weaponDefindex = skin.weapon_defindex;
+    const weaponName = skin.paint_name;
 
-      // All skins in this array share the same weapon, so we only need the first one.
-      const firstItem = skinsArray[0];
-      const weaponId = firstItem.weapon.id;
-      const weaponDefindex = firstItem.weapon.weapon_id;
-      const weaponName = firstItem.weapon.name;
+    const weaponType = categorizeWeapon(weaponId, weaponName);
 
-      const weaponType = categorizeWeapon(weaponId, weaponName);
-
-      // Add to the appropriate map, ensuring no duplicates
-      switch (weaponType) {
-        case "knife":
-          if (!knifeMap.has(weaponDefindex))
-            knifeMap.set(weaponDefindex, weaponId);
-          break;
-        case "glove":
-          if (!gloveMap.has(weaponDefindex))
-            gloveMap.set(weaponDefindex, weaponId);
-          break;
-        default:
-          if (!weaponMap.has(weaponDefindex))
-            weaponMap.set(weaponDefindex, weaponId);
-          break;
-      }
-    });
-  });
+    // Add to the appropriate map, ensuring no duplicates
+    switch (weaponType) {
+      case "knife":
+        if (!knifeMap.has(weaponDefindex))
+          knifeMap.set(weaponDefindex, weaponId);
+        break;
+      case "glove":
+        if (!gloveMap.has(weaponDefindex))
+          gloveMap.set(weaponDefindex, weaponId);
+        break;
+      default:
+        if (!weaponMap.has(weaponDefindex))
+          weaponMap.set(weaponDefindex, weaponId);
+        break;
+    }
+  }
 
   // Convert Maps to sorted Objects for consistent file output
   const toSortedObject = (map) =>
@@ -159,7 +138,6 @@ async function generateMappings(categorizedSkins) {
   const weaponMapping = toSortedObject(weaponMap);
 
   // --- Generate TypeScript file content ---
-  // Note: The OUTPUT is a .ts file, so it correctly contains TypeScript syntax.
   const tsContent = `// Auto-generated weapon mappings from CS:GO API
 // Generated on: ${new Date().toISOString()}
 
@@ -222,29 +200,25 @@ export const isGlove = (defindex: number): boolean => GLOVE_DEFINDEXES.includes(
 
 async function main() {
   try {
-    // --- PHASE 1: Process raw skin data ---
+    // --- PHASE 1: Fetch and transform skin data ---
     const rawSkinsData = await fetchSkinsData();
-    const filteredSkins = filterOutHudItems(rawSkinsData);
+    const transformedSkins = transformSkinsData(rawSkinsData);
     console.log(
-      `[Phase 1] Filtered out HUD items. Remaining items: ${filteredSkins.length}`
+      `[Phase 1] Transformed ${transformedSkins.length} skins to app format.`
     );
-    const processedSkins = removeCratesFromSkins(filteredSkins);
-    console.log("[Phase 1] 'crates' property removed from all skin objects.");
-    const categorizedSkins = categorizeSkinsByClassAndWeapon(processedSkins);
-    console.log("[Phase 1] Skins have been categorized by class and weapon.");
 
-    // Write the cleaned and categorized skins.json file
-    const finalJsonString = JSON.stringify(categorizedSkins, null, 2);
-    const skinsOutputPath = join(process.cwdwd(), "public", "skins.json");
+    // Write the skins.json file as a flat array
+    const finalJsonString = JSON.stringify(transformedSkins, null, 2);
+    const skinsOutputPath = join(process.cwd(), "data", "skins.json");
     await writeFile(skinsOutputPath, finalJsonString);
     console.log(
-      `[Phase 1] ✅ Success! Cleaned data written to ${skinsOutputPath}`
+      `[Phase 1] ✅ Success! Skins data written to ${skinsOutputPath}`
     );
 
     console.log("\n--------------------------------------------------\n");
 
     // --- PHASE 2: Generate mappings from the processed data ---
-    await generateMappings(categorizedSkins);
+    await generateMappings(transformedSkins);
 
     console.log("\n🎉 All tasks completed successfully!");
   } catch (error) {

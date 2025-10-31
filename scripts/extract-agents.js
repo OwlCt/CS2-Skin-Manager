@@ -16,9 +16,32 @@ const AGENTS_API_URL =
 const OUTPUT_FILE_NAME = "agents.json";
 
 /**
- * Fetches agent data, categorizes them by team name, and writes the result to a JSON file.
+ * Converts team string ID to numeric ID
+ * @param {string} teamId - "terrorists" or "counter-terrorists"
+ * @returns {number} - 2 for Terrorists, 3 for Counter-Terrorists
  */
-async function fetchAndWriteCategorizedAgents() {
+function convertTeamId(teamId) {
+  if (teamId === "terrorists") return 2;
+  if (teamId === "counter-terrorists") return 3;
+  return 0; // Unknown
+}
+
+/**
+ * Transforms API agent data to match the app's expected format
+ */
+function transformAgentsData(apiAgents) {
+  return apiAgents.map((agent) => ({
+    team: convertTeamId(agent.team?.id),
+    image: agent.image,
+    model: agent.model,
+    agent_name: agent.name,
+  }));
+}
+
+/**
+ * Fetches agent data, transforms it, and writes the result to a JSON file.
+ */
+async function fetchAndWriteAgents() {
   console.log("Starting agent processing...");
 
   try {
@@ -30,46 +53,37 @@ async function fetchAndWriteCategorizedAgents() {
       throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
     }
 
-    const agents = await response.json();
-    console.log(`Successfully fetched ${agents.length} agents.`);
+    const apiAgents = await response.json();
+    console.log(`Successfully fetched ${apiAgents.length} agents.`);
 
-    // 2. Categorize the agents using team.name as the key
-    // This is the main change from the previous script.
-    const categorizedAgents = agents.reduce((accumulator, agent) => {
-      // Get the team name, e.g., "Counter-Terrorist" or "Terrorist"
-      const teamName = agent.team.name;
+    // 2. Transform the agents to match app format
+    const transformedAgents = transformAgentsData(apiAgents);
+    console.log(`Transformed ${transformedAgents.length} agents.`);
 
-      // If a key for this team name doesn't exist in our object yet, create it as an empty array.
-      if (!accumulator[teamName]) {
-        accumulator[teamName] = [];
-      }
+    // 3. Log team statistics
+    const teamCounts = transformedAgents.reduce((acc, agent) => {
+      const teamId = agent.team;
+      const teamName = teamId === 2 ? "Terrorists (T)" : teamId === 3 ? "Counter-Terrorists (CT)" : "Unknown";
+      acc[teamName] = (acc[teamName] || 0) + 1;
+      return acc;
+    }, {});
 
-      // Push the current agent into the array for that team.
-      accumulator[teamName].push(agent);
-
-      // Return the accumulator for the next iteration.
-      return accumulator;
-    }, {}); // Start with an empty object {} to dynamically create keys.
-
-    // 3. Log the categorization results
-    console.log("\nCategorization complete. Agent counts by team:");
-    for (const teamName in categorizedAgents) {
-      console.log(
-        `- ${teamName}: ${categorizedAgents[teamName].length} agents`
-      );
+    console.log("\nAgent counts by team:");
+    for (const [teamName, count] of Object.entries(teamCounts)) {
+      console.log(`- ${teamName}: ${count} agents`);
     }
 
     // 4. Prepare the data for writing to a file (pretty-printed JSON)
-    const fileContent = JSON.stringify(categorizedAgents, null, 2);
+    const fileContent = JSON.stringify(transformedAgents, null, 2);
 
     // 5. Define the output path and write the file
-    const outputPath = path.join(process.cwd(), "public", OUTPUT_FILE_NAME);
+    const outputPath = path.join(process.cwd(), "data", OUTPUT_FILE_NAME);
 
-    console.log(`\nWriting categorized data to ${outputPath}...`);
+    console.log(`\nWriting agent data to ${outputPath}...`);
     await fs.writeFile(outputPath, fileContent, "utf8");
 
     console.log(
-      "\n✅ Success! The categorized agent data has been written to agents.json."
+      "\n✅ Success! The agent data has been written to agents.json."
     );
   } catch (error) {
     console.error("\n❌ An error occurred during the process:", error);
@@ -77,4 +91,4 @@ async function fetchAndWriteCategorizedAgents() {
 }
 
 // Run the main function
-fetchAndWriteCategorizedAgents();
+fetchAndWriteAgents();

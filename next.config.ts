@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
       {
         hostname: "cdn.jsdelivr.net",
       },
+      {
+        hostname: "community.akamai.steamstatic.com",
+      },
+      {
+        hostname: "cdn.steamstatic.com",
+      },
     ],
   },
   output: "standalone",
