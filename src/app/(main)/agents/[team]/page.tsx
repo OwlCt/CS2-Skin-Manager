@@ -1,6 +1,5 @@
-import AppBreadcrumb, { AppBreadcrumbItem } from "@/components/nav/Breadcrumb";
-import Link from "next/link";
-import { getAgentsByTeam, getAgentTeamsMap } from "@/lib/data";
+import AgentsBreadcrumb from "@/components/nav/AgentsBreadcrumb";
+import { getAgentsByTeam } from "@/lib/data";
 import AgentGrid from "@/components/agents/AgentGrid";
 
 interface AgentTeamPageProps {
@@ -13,22 +12,12 @@ export default async function AgentTeamPage({ params }: AgentTeamPageProps) {
   const { team } = await params;
   const teamName = decodeURIComponent(team);
   const agentsData = await getAgentsByTeam();
-  const agentTeamsMap = getAgentTeamsMap();
+  const agents = agentsData[teamName] || [];
 
   return (
     <div className="p-6">
-      <AppBreadcrumb>
-        <AppBreadcrumbItem>
-          <Link href="/">Home</Link>
-        </AppBreadcrumbItem>
-        <AppBreadcrumbItem>
-          <Link href={`/agents/${teamName}`}>
-            {agentTeamsMap[teamName]} Agents
-          </Link>
-        </AppBreadcrumbItem>
-      </AppBreadcrumb>
-
-      <AgentGrid agents={agentsData[teamName]} />
+      <AgentsBreadcrumb teamName={teamName} />
+      <AgentGrid agents={agents} teamName={teamName} />
     </div>
   );
 }

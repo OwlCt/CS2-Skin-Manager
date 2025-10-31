@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/command";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Skins } from "@/types/skins";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SearchCommandProps {
   open: boolean;
@@ -70,6 +71,7 @@ export default function SearchCommand({
   open,
   onOpenChange,
 }: SearchCommandProps) {
+  const { t } = useLanguage();
   const [searchValue, setSearchValue] = useState("");
   const [allSkins, setAllSkins] = useState<Skins[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -113,16 +115,16 @@ export default function SearchCommand({
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <Command shouldFilter={false}>
         <CommandInput
-          placeholder="Search skins, weapons, or categories..."
+          placeholder={t("search.placeholder")}
           value={searchValue}
           onValueChange={setSearchValue}
         />
         <CommandList>
           <CommandEmpty>
-            {isLoading ? "Loading skins..." : "No results found."}
+            {isLoading ? t("search.loading") : t("search.noResults")}
           </CommandEmpty>
           {filteredSkins.length > 0 && (
-            <CommandGroup heading="Skins">
+            <CommandGroup heading={t("search.skins")}>
               {filteredSkins.map((skin) => (
                 <CommandItem
                   key={`${skin.paint}`}
@@ -141,10 +143,10 @@ export default function SearchCommand({
             </CommandGroup>
           )}
           {searchValue && (
-            <CommandGroup heading="Actions">
+            <CommandGroup heading={t("search.actions")}>
               <CommandItem onSelect={handleSearch} className="p-3">
                 <Search className="mr-2 h-4 w-4" />
-                Search for "{searchValue}"
+                {t("search.searchFor")} "{searchValue}"
               </CommandItem>
             </CommandGroup>
           )}

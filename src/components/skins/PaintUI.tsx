@@ -59,12 +59,13 @@ export default function PaintUI({
   const canHaveStickers = !isKnifeWeapon && !isGloveWeapon;
   const canHaveKeychains = !isKnifeWeapon && !isGloveWeapon;
   const canHaveStatTrak = !isGloveWeapon;
+  const canHaveNametag = !isGloveWeapon;
 
   const [selectedWear, setSelectedWear] = useState("Factory New");
   const [seedRange, setSeedRange] = useState(500);
   const [nameTag, setNameTag] = useState("");
-  const [statTrak, setStatTrak] = useState(true);
-  const [kills, setKills] = useState(1337);
+  const [statTrak, setStatTrak] = useState(false);
+  const [kills, setKills] = useState(0);
   const [activeTab, setActiveTab] = useState("T");
   const [saveLoading, setSaveLoading] = useState(false);
   const router = useRouter();
@@ -95,6 +96,12 @@ export default function PaintUI({
     "Field-Tested": 0.15,
     "Well-Worn": 0.38,
     "Battle-Scarred": 0.45,
+  };
+
+  // Function to get translated wear label
+  const getWearLabel = (wear: string) => {
+    const wearKey = wear.replace(/\s+/g, "").replace("-", "");
+    return t(`wear.${wearKey.charAt(0).toLowerCase() + wearKey.slice(1)}`);
   };
 
   function getTeamValue(tab: string) {
@@ -131,7 +138,7 @@ export default function PaintUI({
     if (saveLoading) return; // Prevent multiple submissions
 
     setSaveLoading(true);
-    toast.loading("Saving configuration...", {
+    toast.loading(t("toast.savingConfig"), {
       id: "save-config",
     });
 
@@ -146,7 +153,8 @@ export default function PaintUI({
           weaponTeam: getTeamValue(activeTab),
           wear: wearValues[selectedWear],
           seed: seedRange.toString(),
-          nametag: nameTag,
+          // Only send nametag if weapon supports it (not gloves)
+          nametag: canHaveNametag ? nameTag : "",
           // Only send StatTrak if weapon supports it (not gloves)
           stattrak: canHaveStatTrak ? statTrak : false,
           stattrakCount: canHaveStatTrak ? kills.toString() : "0",
@@ -275,10 +283,10 @@ export default function PaintUI({
                     </TooltipTrigger>
                     <TooltipContent sideOffset={8}>
                       {team === "T"
-                        ? "Apply T Side"
+                        ? t("team.applyT")
                         : team === "CT"
-                        ? "Apply CT Side"
-                        : "Apply to both teams"}
+                        ? t("team.applyCT")
+                        : t("team.applyBoth")}
                     </TooltipContent>
                   </Tooltip>
                 ))}
@@ -288,7 +296,7 @@ export default function PaintUI({
                 onClick={() => router.back()}
                 className="mt-2 px-8 py-3 rounded-xl font-semibold border bg-muted/40 backdrop-blur-md border-border text-muted-foreground hover:bg-muted/60 transition-all duration-300"
               >
-                Select another skin
+                {t("skin.selectAnother")}
               </button>
               <button
                 type="button"
@@ -296,7 +304,7 @@ export default function PaintUI({
                 disabled={saveLoading}
                 className="mt-2 px-8 py-3 rounded-xl font-semibold border bg-primary text-primary-foreground border-primary shadow hover:bg-primary/80 transition-all duration-300"
               >
-                {saveLoading ? "Saving..." : "Save Configuration"}
+                {saveLoading ? t("action.saving") : t("skin.saveConfiguration")}
               </button>
             </motion.div>
           </motion.div>
@@ -314,7 +322,7 @@ export default function PaintUI({
               >
                 <Settings className="w-6 h-6 text-primary" />
                 <h2 className="text-2xl font-bold text-foreground">
-                  Customize
+                  {t("skin.customize")}
                 </h2>
               </motion.div>
               <div className="space-y-6">
@@ -322,14 +330,14 @@ export default function PaintUI({
                 <motion.div variants={itemVariants}>
                   <label className="flex items-center gap-2 text-lg font-medium text-foreground mb-3">
                     <Star className="w-5 h-5 text-yellow-400" />
-                    Wear
+                    {t("skin.wear")}
                   </label>
                   <motion.div className="relative" whileHover={{ scale: 1.02 }}>
                     <MotionSelect
-                      options={wearOptions.map((w) => ({ value: w, label: w }))}
+                      options={wearOptions.map((w) => ({ value: w, label: getWearLabel(w) }))}
                       value={selectedWear}
                       onChange={setSelectedWear}
-                      placeholder="Select wear"
+                      placeholder={t("skin.wear")}
                       className="w-full"
                     />
                   </motion.div>
@@ -338,7 +346,7 @@ export default function PaintUI({
                 <motion.div variants={itemVariants}>
                   <label className="flex items-center gap-2 text-lg font-medium text-foreground mb-3">
                     <Zap className="w-5 h-5 text-blue-400" />
-                    Seed
+                    {t("skin.seed")}
                   </label>
                   <div className="space-y-2">
                     <input
@@ -358,21 +366,23 @@ export default function PaintUI({
                     </div>
                   </div>
                 </motion.div>
-                {/* Name Tag */}
-                <motion.div variants={itemVariants}>
-                  <label className="flex items-center gap-2 text-lg font-medium text-foreground mb-3">
-                    <Tag className="w-5 h-5 text-green-400" />
-                    Name Tag
-                  </label>
-                  <motion.input
-                    type="text"
-                    value={nameTag}
-                    onChange={(e) => setNameTag(e.target.value)}
-                    placeholder="Enter custom name..."
-                    className="w-full bg-muted/40 backdrop-blur-md border border-border rounded-xl px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    whileFocus={{ scale: 1.02 }}
-                  />
-                </motion.div>
+                {/* Name Tag - Only for weapons and knives (not gloves) */}
+                {canHaveNametag && (
+                  <motion.div variants={itemVariants}>
+                    <label className="flex items-center gap-2 text-lg font-medium text-foreground mb-3">
+                      <Tag className="w-5 h-5 text-green-400" />
+                      {t("skin.nametag")}
+                    </label>
+                    <motion.input
+                      type="text"
+                      value={nameTag}
+                      onChange={(e) => setNameTag(e.target.value)}
+                      placeholder={t("skin.nametagPlaceholder")}
+                      className="w-full bg-muted/40 backdrop-blur-md border border-border rounded-xl px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      whileFocus={{ scale: 1.02 }}
+                    />
+                  </motion.div>
+                )}
                 {/* StatTrak & Kills - Only for weapons and knives (not gloves) */}
                 {canHaveStatTrak && (
                   <motion.div variants={itemVariants}>
@@ -380,7 +390,7 @@ export default function PaintUI({
                       <div className="flex-1">
                         <label className="flex items-center gap-2 text-lg font-medium text-foreground mb-3">
                           <Target className="w-5 h-5 text-red-400" />
-                          StatTrak
+                          {t("skin.stattrak")}
                         </label>
                         <motion.button
                           onClick={() => setStatTrak(!statTrak)}
@@ -392,12 +402,12 @@ export default function PaintUI({
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          {statTrak ? "ON" : "OFF"}
+                          {statTrak ? t("skin.on") : t("skin.off")}
                         </motion.button>
                       </div>
                       <div className="flex-1">
                         <label className="text-lg font-medium text-foreground mb-3 block">
-                          Kills
+                          {t("skin.kills")}
                         </label>
                         <motion.input
                           type="number"
@@ -422,7 +432,7 @@ export default function PaintUI({
                     {canHaveStickers && (
                       <div className="flex-1">
                         <label className="text-lg font-medium text-foreground mb-3 block">
-                          Stickers
+                          {t("skin.stickers")}
                         </label>
                         <div className="flex gap-1 md:gap-2 flex-wrap">
                           {selectedStickers.map((sticker, i) => (
@@ -453,7 +463,7 @@ export default function PaintUI({
                               <TooltipContent>
                                 {sticker
                                   ? sticker.name.replace("Sticker | ", "")
-                                  : `Add sticker to slot ${i + 1}`}
+                                  : `${t("skin.addStickerSlot")} ${i + 1}`}
                               </TooltipContent>
                             </Tooltip>
                           ))}
@@ -463,7 +473,7 @@ export default function PaintUI({
                     {canHaveKeychains && (
                       <div className="flex-1">
                         <label className="text-lg font-medium text-foreground mb-3 block">
-                          Keychain
+                          {t("skin.keychain")}
                         </label>
                         <div className="flex gap-1 md:gap-2 flex-wrap">
                           <Tooltip>
@@ -493,7 +503,7 @@ export default function PaintUI({
                             <TooltipContent>
                               {selectedKeychain
                                 ? selectedKeychain.name.replace("Charm | ", "")
-                                : "Add keychain"}
+                                : t("skin.addKeychain")}
                             </TooltipContent>
                           </Tooltip>
                         </div>

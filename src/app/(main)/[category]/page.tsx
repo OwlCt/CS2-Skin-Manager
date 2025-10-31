@@ -1,9 +1,8 @@
-import AppBreadcrumb, { AppBreadcrumbItem } from "@/components/nav/Breadcrumb";
 import WeaponList from "@/components/weapons/WeaponList";
 import { getBaseWeapons } from "@/lib/data";
 import { getWeaponsForCategory } from "@/lib/data";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import CategoryBreadcrumb from "@/components/nav/CategoryBreadcrumb";
 
 interface CategoryPageProps {
   params: Promise<{
@@ -34,24 +33,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Enhanced breadcrumb with better styling */}
-      <div>
-        <AppBreadcrumb>
-          <AppBreadcrumbItem>
-            <Link
-              href="/"
-              className="text-muted-foreground hover:text-foreground transition-colors duration-200"
-            >
-              Home
-            </Link>
-          </AppBreadcrumbItem>
-          <AppBreadcrumbItem isCurrent>
-            <span className="text-foreground font-medium">
-              {categoryDisplayName}
-            </span>
-          </AppBreadcrumbItem>
-        </AppBreadcrumb>
-      </div>
+      <CategoryBreadcrumb category={categoryDisplayName} />
 
       <WeaponList
         categoryName={categoryDisplayName}

@@ -12,12 +12,13 @@ import { createAgentTranslationMap } from "@/lib/translation-mapping";
 
 type AgentGridProps = {
   agents: Agent[];
+  teamName?: string;
 };
 
-export default function AgentGrid({ agents }: AgentGridProps) {
+export default function AgentGrid({ agents, teamName }: AgentGridProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [translationMap, setTranslationMap] = useState<Map<string, string>>(new Map());
 
   // Load translations when language changes
@@ -39,15 +40,22 @@ export default function AgentGrid({ agents }: AgentGridProps) {
     loadTranslations();
   }, [language, agents]);
 
-  // Filter agents based on search
+  // Filter agents based on search (supports both English and translated names)
   const filteredAgents = useMemo(() => {
     if (!searchQuery.trim()) return agents;
-    
+
     const query = searchQuery.toLowerCase().trim();
-    return agents.filter(agent => 
-      agent.agent_name.toLowerCase().includes(query)
-    );
-  }, [agents, searchQuery]);
+    return agents.filter(agent => {
+      // Search in English name
+      const matchesEnglish = agent.agent_name.toLowerCase().includes(query);
+
+      // Search in translated name (if translations are loaded)
+      const translatedName = translationMap.get(agent.agent_name);
+      const matchesTranslated = translatedName && translatedName.toLowerCase().includes(query);
+
+      return matchesEnglish || matchesTranslated;
+    });
+  }, [agents, searchQuery, translationMap]);
 
   const handleAgentClick = async (agent: Agent) => {
     if (!agent.team) {
@@ -55,7 +63,7 @@ export default function AgentGrid({ agents }: AgentGridProps) {
       return;
     }
 
-    toast.loading("Saving...", {
+    toast.loading(t("toast.savingConfig"), {
       id: "agent-loading",
     });
     setIsLoading(true);
@@ -76,7 +84,7 @@ export default function AgentGrid({ agents }: AgentGridProps) {
         const errorData = await response.json();
         console.error("Agent config error:", errorData);
 
-        toast.error(errorData.error || "Failed to save agent configuration", {
+        toast.error(errorData.error || t("toast.agentFailed"), {
           id: "agent-loading",
           description: errorData.details ? JSON.stringify(errorData.details) : undefined,
         });
@@ -84,12 +92,12 @@ export default function AgentGrid({ agents }: AgentGridProps) {
         return;
       }
 
-      toast.success("Agent configuration saved successfully", {
+      toast.success(t("toast.agentEquipped"), {
         id: "agent-loading",
       });
     } catch (error) {
       console.error("Failed to save agent config:", error);
-      toast.error("Failed to save agent configuration", {
+      toast.error(t("toast.agentFailed"), {
         id: "agent-loading",
       });
     } finally {
@@ -103,9 +111,9 @@ export default function AgentGrid({ agents }: AgentGridProps) {
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">Agents</h1>
+            <h1 className="text-3xl font-bold">{t("nav.agents")}</h1>
             <Badge variant="secondary">
-              {filteredAgents.length} agent{filteredAgents.length !== 1 ? 's' : ''}
+              {filteredAgents.length} {filteredAgents.length === 1 ? 'agent' : 'agents'}
             </Badge>
           </div>
         </div>
@@ -115,7 +123,7 @@ export default function AgentGrid({ agents }: AgentGridProps) {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search agents..."
+            placeholder={`${t("nav.search").replace("...", "")} ${t("nav.agents").toLowerCase()}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -151,7 +159,7 @@ export default function AgentGrid({ agents }: AgentGridProps) {
                   </p>
                   {isLoading && (
                     <div className="text-xs text-center text-muted-foreground mt-1">
-                      Saving...
+                      {t("action.saving")}
                     </div>
                   )}
                 </div>
@@ -164,11 +172,11 @@ export default function AgentGrid({ agents }: AgentGridProps) {
           <div className="w-16 h-16 mb-4 rounded-full bg-muted/20 flex items-center justify-center">
             <Search className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">No agents found</h3>
+          <h3 className="text-lg font-semibold mb-2">{t("search.noResults")}</h3>
           <p className="text-muted-foreground">
-            {searchQuery 
-              ? `No agents match your search "${searchQuery}".`
-              : "No agents are available."
+            {searchQuery
+              ? `${t("search.searchFor")} "${searchQuery}"。`
+              : t("weapon.noWeaponsAvailable")
             }
           </p>
         </div>

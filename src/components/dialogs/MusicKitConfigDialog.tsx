@@ -8,6 +8,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { MusicKit } from "@/lib/types";
 import Image from "next/image";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MusicKitConfigDialogProps {
   open: boolean;
@@ -27,6 +28,7 @@ export default function MusicKitConfigDialog({
   musicKit,
   onSave,
 }: MusicKitConfigDialogProps) {
+  const { t } = useLanguage();
   const [team, setTeam] = useState<"ct" | "t">("ct");
 
   const handleSave = () => {
@@ -38,18 +40,17 @@ export default function MusicKitConfigDialog({
         defIndex: musicKit.def_index,
       });
 
-      toast.success("Music kit equipped successfully!", {
-        description: `${musicKit.name} has been equipped for ${
-          team === "ct" ? "Counter-Terrorist" : "Terrorist"
-        } team.`,
+      toast.success(t("toast.musicKitEquipped"), {
+        description: `${musicKit.name} ${t("toast.musicKitEquippedDesc")} ${
+          team === "ct" ? t("team.counterTerrorist") : t("team.terrorist")
+        } ${t("toast.musicKitEquippedTeam")}`,
       });
 
       onOpenChange(false);
     } catch (error) {
       console.error("Error saving music kit config:", error);
-      toast.error("Failed to equip music kit", {
-        description:
-          "There was an error equipping the music kit. Please try again.",
+      toast.error(t("toast.musicKitFailed"), {
+        description: t("toast.musicKitFailedDesc"),
       });
     }
   };
@@ -98,7 +99,7 @@ export default function MusicKitConfigDialog({
         <div className="grid gap-4 px-6 pb-4">
           {/* Team Selection */}
           <div className="grid gap-2">
-            <Label className="text-sm font-medium">Team</Label>
+            <Label className="text-sm font-medium">{t("team.label")}</Label>
             <ToggleGroup
               type="single"
               value={team}
@@ -112,34 +113,33 @@ export default function MusicKitConfigDialog({
                 aria-label="Counter-Terrorists"
                 className="flex-1"
               >
-                Counter-Terrorist
+                {t("team.counterTerrorist")}
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="t"
                 aria-label="Terrorists"
                 className="flex-1"
               >
-                Terrorist
+                {t("team.terrorist")}
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
 
           <div className="grid gap-2">
             <Label className="text-sm font-medium">
-              Music Kit Configuration
+              {t("dialog.musicKitConfig")}
             </Label>
             <p className="text-sm text-muted-foreground">
-              This music kit will be equipped and played during matches for the
-              selected team.
+              {t("dialog.musicKitDescription")}
             </p>
           </div>
         </div>
 
         <DialogFooter className="px-6 pb-6">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("action.cancel")}
           </Button>
-          <Button onClick={handleSave}>Equip Music Kit</Button>
+          <Button onClick={handleSave}>{t("dialog.equipMusicKit")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

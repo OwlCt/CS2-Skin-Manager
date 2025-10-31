@@ -67,7 +67,7 @@ export function useTranslation() {
   };
 
   /**
-   * Get translated weapon name by weapon_id
+   * Get translated weapon name by weapon_id (defindex)
    */
   const getWeaponName = (weaponDefindex: number): string => {
     if (!translations?.skins) return "";
@@ -77,6 +77,147 @@ export function useTranslation() {
     );
 
     return skin?.weapon?.name || "";
+  };
+
+  /**
+   * Get translated weapon name by weapon key (e.g., "weapon_knife_butterfly")
+   * This is useful for weapon lists where you have the weapon key from base_weapons.json
+   */
+  const getWeaponNameByKey = (weaponKey: string): string => {
+    if (!translations?.skins) return "";
+
+    const skin = translations.skins.find(
+      (s: any) => s.weapon?.id === weaponKey
+    );
+
+    return skin?.weapon?.name || "";
+  };
+
+  /**
+   * Get translated weapon name by English weapon name
+   * Handles knife names with stars like "★ Bayonet"
+   * This is useful when you have the English name from base_weapons.json
+   */
+  const getWeaponNameByEnglish = (englishName: string): string => {
+    if (!translations?.skins) return englishName;
+
+    // Handle knife names with stars (e.g., "★ Bayonet")
+    // The translation API has the format "刺刀（★）" instead of "★ 刺刀"
+    if (englishName.startsWith("★ ")) {
+      const knifeNameWithoutStar = englishName.substring(2).trim().toLowerCase();
+
+      // Create weapon_id format: "★ Butterfly Knife" -> "weapon_knife_butterfly_knife"
+      // Note: The API format is "weapon_knife_{type}", not "weapon_{type}"
+      const weaponId = `weapon_knife_${knifeNameWithoutStar.replace(/\s+/g, '_')}`;
+
+      // Try to find the knife in translations by weapon.id
+      const knifeSkin = translations.skins.find((s: any) => {
+        return s.weapon?.id === weaponId;
+      });
+
+      if (knifeSkin?.weapon?.name) {
+        // Return in the format "刺刀（★）"
+        return `${knifeSkin.weapon.name}（★）`;
+      }
+    }
+
+    // Try to find a matching weapon by comparing English names
+    // The skins array contains weapons with their English names in the weapon.name field in English translation
+    // For non-English languages, we need to match by weapon structure
+
+    // Create a normalized version of the input name for comparison
+    const normalizedInput = englishName.toLowerCase().trim();
+
+    // For gloves, try to match by the base type
+    if (normalizedInput.includes("glove") || normalizedInput.includes("wrap")) {
+      // Try to find by matching patterns in weapon names
+      const gloveTypes: Record<string, number> = {
+        "hand wraps": 5032,
+        "driver gloves": 5031,
+        "sport gloves": 5030,
+        "moto gloves": 5033,
+        "specialist gloves": 5034,
+        "bloodhound gloves": 5027,
+        "hydra gloves": 5035,
+        "broken fang gloves": 4725,
+      };
+
+      // Remove spaces from input for matching
+      const normalizedInputNoSpace = normalizedInput.replace(/\s+/g, "");
+
+      for (const [type, defindex] of Object.entries(gloveTypes)) {
+        const normalizedType = type.replace(/\s+/g, "");
+        if (normalizedInputNoSpace.includes(normalizedType) || normalizedType.includes(normalizedInputNoSpace)) {
+          return getWeaponName(defindex);
+        }
+      }
+    }
+
+    // For other weapons, try to match by weapon name
+    const weaponMappings: Record<string, number> = {
+      "ak-47": 7,
+      "aug": 8,
+      "awp": 9,
+      "cz75-auto": 63,
+      "desert eagle": 1,
+      "dual berettas": 2,
+      "famas": 10,
+      "five-seven": 3,
+      "g3sg1": 11,
+      "galil ar": 13,
+      "glock-18": 4,
+      "m249": 14,
+      "m4a1-s": 60,
+      "m4a4": 16,
+      "mac-10": 17,
+      "mag-7": 27,
+      "mp5-sd": 23,
+      "mp7": 33,
+      "mp9": 34,
+      "negev": 28,
+      "nova": 35,
+      "p2000": 32,
+      "p250": 36,
+      "p90": 19,
+      "pp-bizon": 26,
+      "r8 revolver": 64,
+      "sawed-off": 29,
+      "scar-20": 38,
+      "sg 553": 39,
+      "ssg 08": 40,
+      "tec-9": 30,
+      "ump-45": 24,
+      "usp-s": 61,
+      "xm1014": 25,
+      "knife": 42,
+      "bayonet": 500,
+      "flip knife": 505,
+      "gut knife": 506,
+      "karambit": 507,
+      "m9 bayonet": 508,
+      "huntsman knife": 509,
+      "falchion knife": 512,
+      "bowie knife": 514,
+      "butterfly knife": 515,
+      "shadow daggers": 516,
+      "paracord knife": 517,
+      "survival knife": 518,
+      "ursus knife": 519,
+      "navaja knife": 520,
+      "nomad knife": 521,
+      "stiletto knife": 522,
+      "talon knife": 523,
+      "classic knife": 503,
+      "skeleton knife": 525,
+    };
+
+    const matchedDefindex = weaponMappings[normalizedInput];
+    if (matchedDefindex) {
+      return getWeaponName(matchedDefindex);
+    }
+
+    // If no match found, return the original name
+    return englishName;
   };
 
   /**
@@ -156,6 +297,8 @@ export function useTranslation() {
     getSkinName,
     getPatternName,
     getWeaponName,
+    getWeaponNameByKey,
+    getWeaponNameByEnglish,
     getAgentName,
     getMusicKitName,
     getCategoryName,

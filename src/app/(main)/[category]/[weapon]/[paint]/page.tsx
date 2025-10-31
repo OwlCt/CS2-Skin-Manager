@@ -1,8 +1,7 @@
-import AppBreadcrumb, { AppBreadcrumbItem } from "@/components/nav/Breadcrumb";
 import PaintUI from "@/components/skins/PaintUI";
 import { getSkinByPaintId, getStickers, getKeychains } from "@/lib/data";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import PaintBreadcrumb from "@/components/nav/PaintBreadcrumb";
 
 type PaintProps = {
   params: Promise<{
@@ -26,22 +25,16 @@ export default async function Paint({ params }: PaintProps) {
 
   return (
     <div className="p-6 flex flex-col gap-6">
-      <AppBreadcrumb>
-        <AppBreadcrumbItem>
-          <Link href="/">Home</Link>
-        </AppBreadcrumbItem>
-        <AppBreadcrumbItem>
-          <Link href={`/${category}`}>{skin.category}</Link>
-        </AppBreadcrumbItem>
-        <AppBreadcrumbItem>
-          <Link href={`/${category}/${weapon}`}>
-            {skin.paint_name.split("|")[0]}
-          </Link>
-        </AppBreadcrumbItem>
-        <AppBreadcrumbItem isCurrent>
-          {skin.paint_name.split("|")[1]} {skin.phase ? `(${skin.phase})` : ""}
-        </AppBreadcrumbItem>
-      </AppBreadcrumb>
+      <PaintBreadcrumb
+        category={category}
+        weapon={weapon}
+        skinCategory={skin.category}
+        weaponName={skin.paint_name.split("|")[0].trim()}
+        skinName={skin.paint_name.split("|")[1]?.trim() || skin.paint_name}
+        phase={skin.phase}
+        paintIndex={skin.paint}
+        weaponDefindex={skin.weapon_defindex}
+      />
 
       <PaintUI skin={skin} stickers={stickers} keychains={keychains} />
     </div>

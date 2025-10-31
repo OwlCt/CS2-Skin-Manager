@@ -4,6 +4,7 @@ import BaseCard from "@/components/ui/BaseCard";
 import { useRouter } from "next/navigation";
 import { memo, useCallback } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface WeaponCardProps {
   displayName: string;
@@ -19,10 +20,14 @@ const WeaponCard = memo<WeaponCardProps>(({
   categoryRoute,
 }) => {
   const router = useRouter();
+  const { getWeaponNameByKey, loading } = useTranslation();
 
   const handleClick = useCallback(() => {
     router.push(`/${categoryRoute}/${weaponKey}`);
   }, [router, categoryRoute, weaponKey]);
+
+  // Get translated weapon name using weapon key for accuracy, fallback to displayName if loading or not found
+  const translatedName = loading ? displayName : (getWeaponNameByKey(weaponKey) || displayName);
 
   const nameBar = (
     <motion.div
@@ -43,7 +48,7 @@ const WeaponCard = memo<WeaponCardProps>(({
     >
       <motion.p
         className="text-sm font-medium truncate text-center w-full transition-all duration-200"
-        style={{ 
+        style={{
           color: "#e2e8f0",
           textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)",
         }}
@@ -53,7 +58,7 @@ const WeaponCard = memo<WeaponCardProps>(({
         }}
         transition={{ duration: 0.2 }}
       >
-        {displayName}
+        {translatedName}
       </motion.p>
     </motion.div>
   );
@@ -66,7 +71,7 @@ const WeaponCard = memo<WeaponCardProps>(({
     >
       <BaseCard
         imageSrc={imagePath}
-        alt={`${displayName} weapon`}
+        alt={`${translatedName} weapon`}
         onClick={handleClick}
         nameBar={nameBar}
         aspect="aspect-square"

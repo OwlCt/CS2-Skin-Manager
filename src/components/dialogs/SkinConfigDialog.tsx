@@ -9,6 +9,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skin } from "@/lib/types";
 import Image from "next/image";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SkinConfigDialogProps {
   open: boolean;
@@ -29,6 +30,8 @@ export default function SkinConfigDialog({
   skin,
   onSave,
 }: SkinConfigDialogProps) {
+  const { t } = useLanguage();
+
   // Initialize team based on the skin's team assignment
   const getInitialTeam = (): "ct" | "t" | "both" => {
     console.log("Skin team data:", { id: skin.team.id, name: skin.team.name });
@@ -54,20 +57,15 @@ export default function SkinConfigDialog({
     try {
       onSave({ team, wear, seed });
 
-      toast.success("Skin configuration applied successfully!", {
-        description: `${
-          skin.name
-        } has been configured with float ${wear.toFixed(
-          3
-        )} and pattern ${seed}.`,
+      toast.success(t("toast.skinApplied"), {
+        description: `${skin.name} ${t("toast.skinAppliedDesc")} ${wear.toFixed(3)} ${t("toast.skinAppliedDescPattern")} ${seed}。`,
       });
 
       onOpenChange(false);
     } catch (error) {
       console.error("Error saving skin config:", error);
-      toast.error("Failed to apply skin configuration", {
-        description:
-          "There was an error applying the skin configuration. Please try again.",
+      toast.error(t("toast.skinFailed"), {
+        description: t("toast.skinFailedDesc"),
       });
     }
   };
@@ -118,7 +116,7 @@ export default function SkinConfigDialog({
           {/* Team Selection - only show if weapon supports multiple teams */}
           {skin.team.id === "both" && (
             <div className="grid gap-2">
-              <Label className="text-sm font-medium">Team</Label>
+              <Label className="text-sm font-medium">{t("team.label")}</Label>
               <ToggleGroup
                 type="single"
                 value={team}
@@ -132,21 +130,21 @@ export default function SkinConfigDialog({
                   aria-label="Counter-Terrorists"
                   className="flex-1"
                 >
-                  CT
+                  {t("team.ct")}
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="both"
                   aria-label="Both Teams"
                   className="flex-1"
                 >
-                  Both
+                  {t("team.both")}
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="t"
                   aria-label="Terrorists"
                   className="flex-1"
                 >
-                  T
+                  {t("team.t")}
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
@@ -154,7 +152,7 @@ export default function SkinConfigDialog({
 
           {/* Custom Float Slider */}
           <div className="grid gap-3">
-            <Label className="text-sm font-medium">Float Value</Label>
+            <Label className="text-sm font-medium">{t("wear.floatValue")}</Label>
 
             <div className="text-center">
               <div className="text-xl font-bold text-foreground">
@@ -179,11 +177,11 @@ export default function SkinConfigDialog({
                 />
               </div>
               <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                <span>FN</span>
-                <span>MW</span>
-                <span>FT</span>
-                <span>WW</span>
-                <span>BS</span>
+                <span>{t("wear.fn")}</span>
+                <span>{t("wear.mw")}</span>
+                <span>{t("wear.ft")}</span>
+                <span>{t("wear.ww")}</span>
+                <span>{t("wear.bs")}</span>
               </div>
             </div>
           </div>
@@ -191,7 +189,7 @@ export default function SkinConfigDialog({
           {/* Seed Configuration */}
           <div className="grid gap-2">
             <Label htmlFor="seed" className="text-sm font-medium">
-              Pattern
+              {t("wear.pattern")}
             </Label>
             <Input
               id="seed"
@@ -208,9 +206,9 @@ export default function SkinConfigDialog({
 
         <DialogFooter className="px-6 pb-6">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("action.cancel")}
           </Button>
-          <Button onClick={handleSave}>Apply</Button>
+          <Button onClick={handleSave}>{t("action.apply")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

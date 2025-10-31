@@ -18,7 +18,7 @@ type MusicKitGridProps = {
 const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [translationMap, setTranslationMap] = useState<Map<number, string>>(new Map());
 
   // Load translations when language changes
@@ -40,18 +40,25 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
     loadTranslations();
   }, [language, kits]);
 
-  // Filter music kits based on search
+  // Filter music kits based on search (supports both English and translated names)
   const filteredKits = useMemo(() => {
     if (!searchQuery.trim()) return kits;
-    
+
     const query = searchQuery.toLowerCase().trim();
-    return kits.filter(kit => 
-      kit.name.toLowerCase().includes(query)
-    );
-  }, [kits, searchQuery]);
+    return kits.filter(kit => {
+      // Search in English name
+      const matchesEnglish = kit.name.toLowerCase().includes(query);
+
+      // Search in translated name (if translations are loaded)
+      const translatedName = translationMap.get(kit.id);
+      const matchesTranslated = translatedName && translatedName.toLowerCase().includes(query);
+
+      return matchesEnglish || matchesTranslated;
+    });
+  }, [kits, searchQuery, translationMap]);
 
   const handleMusicKitClick = async (kit: MusicKit) => {
-    toast.loading("Loading...", {
+    toast.loading(t("toast.savingConfig"), {
       id: "musickit-loading",
     });
 
@@ -72,7 +79,7 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
       if (!response.ok) {
         const errorData = await response.json();
         toast.error(
-          errorData.error || "Failed to save music kit configuration",
+          errorData.error || t("toast.musicKitFailed"),
           {
             id: "musickit-loading",
           }
@@ -81,12 +88,12 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
         return;
       }
 
-      toast.success("Music kit configuration saved successfully", {
+      toast.success(t("toast.musicKitEquipped"), {
         id: "musickit-loading"
       });
     } catch (error) {
       console.error("Failed to save music kit config:", error);
-      toast.error("Failed to save music kit configuration", {
+      toast.error(t("toast.musicKitFailed"), {
         id: "musickit-loading"
       });
     } finally {
@@ -100,9 +107,9 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">Music Kits</h1>
+            <h1 className="text-3xl font-bold">{t("nav.musicKits")}</h1>
             <Badge variant="secondary">
-              {filteredKits.length} kit{filteredKits.length !== 1 ? 's' : ''}
+              {filteredKits.length} {filteredKits.length === 1 ? 'kit' : 'kits'}
             </Badge>
           </div>
         </div>
@@ -112,7 +119,7 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search music kits..."
+            placeholder={`${t("nav.search").replace("...", "")} ${t("nav.musicKits").toLowerCase()}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -154,7 +161,7 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
                   </p>
                   {isLoading && (
                     <div className="text-xs text-center text-muted-foreground mt-1">
-                      Saving...
+                      {t("action.saving")}
                     </div>
                   )}
                 </div>
@@ -167,11 +174,11 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
           <div className="w-16 h-16 mb-4 rounded-full bg-muted/20 flex items-center justify-center">
             <Search className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">No music kits found</h3>
+          <h3 className="text-lg font-semibold mb-2">{t("search.noResults")}</h3>
           <p className="text-muted-foreground">
-            {searchQuery 
-              ? `No music kits match your search "${searchQuery}".`
-              : "No music kits are available."
+            {searchQuery
+              ? `${t("search.searchFor")} "${searchQuery}"。`
+              : t("weapon.noWeaponsAvailable")
             }
           </p>
         </div>

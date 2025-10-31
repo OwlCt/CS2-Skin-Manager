@@ -24,16 +24,15 @@ export default function LanguageSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="ghost"
-          size="icon"
-          className="relative h-8 w-8"
+          variant="outline"
+          className="relative h-10 w-10 rounded-full shadow-lg bg-background/80 backdrop-blur-md hover:bg-background border-border"
           title="Change language"
         >
-          <Languages className="h-4 w-4" />
+          <Languages className="h-5 w-5" />
           <span className="sr-only">Change language</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="start" side="top" className="w-48 mb-2">
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.value}

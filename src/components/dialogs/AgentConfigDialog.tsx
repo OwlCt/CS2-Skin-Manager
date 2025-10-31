@@ -8,6 +8,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skin } from "@/lib/types";
 import Image from "next/image";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AgentConfigDialogProps {
   open: boolean;
@@ -27,6 +28,8 @@ export default function AgentConfigDialog({
   agent,
   onSave,
 }: AgentConfigDialogProps) {
+  const { t } = useLanguage();
+
   // Initialize team based on the agent's team assignment
   const getInitialTeam = (): "ct" | "t" => {
     console.log("Agent team data:", {
@@ -63,18 +66,17 @@ export default function AgentConfigDialog({
         modelPlayer: (agent as any).model_player || "",
       });
 
-      toast.success("Agent equipped successfully!", {
-        description: `${agent.name} has been equipped for ${
-          team === "ct" ? "Counter-Terrorist" : "Terrorist"
-        } team.`,
+      toast.success(t("toast.agentEquipped"), {
+        description: `${agent.name} ${t("toast.agentEquippedDesc")} ${
+          team === "ct" ? t("team.counterTerrorist") : t("team.terrorist")
+        } ${t("toast.agentEquippedTeam")}`,
       });
 
       onOpenChange(false);
     } catch (error) {
       console.error("Error saving agent config:", error);
-      toast.error("Failed to equip agent", {
-        description:
-          "There was an error equipping the agent. Please try again.",
+      toast.error(t("toast.agentFailed"), {
+        description: t("toast.agentFailedDesc"),
       });
     }
   };
@@ -118,7 +120,7 @@ export default function AgentConfigDialog({
         <div className="grid gap-4 px-6 pb-4">
           {/* Team Selection */}
           <div className="grid gap-2">
-            <Label className="text-sm font-medium">Deploy as</Label>
+            <Label className="text-sm font-medium">{t("team.deployAs")}</Label>
             <ToggleGroup
               type="single"
               value={team}
@@ -132,14 +134,14 @@ export default function AgentConfigDialog({
                 aria-label="Counter-Terrorists"
                 className="flex-1"
               >
-                Counter-Terrorist
+                {t("team.counterTerrorist")}
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="t"
                 aria-label="Terrorists"
                 className="flex-1"
               >
-                Terrorist
+                {t("team.terrorist")}
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
@@ -147,9 +149,9 @@ export default function AgentConfigDialog({
 
         <DialogFooter className="px-6 pb-6">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("action.cancel")}
           </Button>
-          <Button onClick={handleSave}>Equip Agent</Button>
+          <Button onClick={handleSave}>{t("dialog.equipAgent")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

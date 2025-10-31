@@ -4,6 +4,7 @@ import { getCategories } from "@/lib/data";
 import { getSession } from "@/lib/session";
 import Navigation from "@/components/nav/Navigation";
 import { getAgentTeamsMap } from "@/lib/data";
+import FloatingLanguageSwitcher from "@/components/nav/FloatingLanguageSwitcher";
 
 export default async function MainAppLayout({
   children,
@@ -46,6 +47,9 @@ export default async function MainAppLayout({
           <div className="h-full">{children}</div>
         </div>
       </main>
+
+      {/* Floating language switcher at bottom left */}
+      <FloatingLanguageSwitcher />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo, useCallback, memo } from "react";
 import { Folder, Users, Music, ChevronRight, Sparkles, LucideIcon } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Types and Interfaces
 interface SidebarProps {
@@ -340,6 +341,7 @@ SidebarHeader.displayName = 'SidebarHeader';
 
 // Main Component
 export default function Sidebar({ categories, agentTeams }: SidebarProps) {
+  const { t } = useLanguage();
   const {
     hoveredItem,
     setHoveredItem,
@@ -351,7 +353,13 @@ export default function Sidebar({ categories, agentTeams }: SidebarProps) {
     agentTeamsCount,
   } = useSidebarLogic(categories, agentTeams);
 
-  const weaponItems = useMemo(() => 
+  // Helper function to translate category names
+  const getCategoryLabel = useCallback((category: string) => {
+    const categoryKey = `category.${category.toLowerCase()}`;
+    return t(categoryKey);
+  }, [t]);
+
+  const weaponItems = useMemo(() =>
     Object.keys(categories).map((category, index) => {
       const isActive = isActiveCategory(category);
       const itemCount = categories[category]?.length || 0;
@@ -361,7 +369,7 @@ export default function Sidebar({ categories, agentTeams }: SidebarProps) {
         <SidebarItem
           key={category}
           href={getCategoryLink(category)}
-          label={category}
+          label={getCategoryLabel(category)}
           isActive={isActive}
           count={itemCount}
           itemKey={`weapon-${category}`}
@@ -373,11 +381,18 @@ export default function Sidebar({ categories, agentTeams }: SidebarProps) {
           hoverColor={config.hoverColor}
         />
       );
-    }), 
-    [categories, hoveredItem, setHoveredItem, getCategoryLink, isActiveCategory]
+    }),
+    [categories, hoveredItem, setHoveredItem, getCategoryLink, isActiveCategory, getCategoryLabel]
   );
 
-  const agentItems = useMemo(() => 
+  // Helper function to translate team names
+  const getTeamLabel = useCallback((team: string) => {
+    if (team.toLowerCase() === "counter-terrorists") return t("team.counterTerrorists");
+    if (team.toLowerCase() === "terrorists") return t("team.terrorists");
+    return team;
+  }, [t]);
+
+  const agentItems = useMemo(() =>
     agentTeams.map((team, index) => {
       const isActive = isActiveAgentTeam(team);
       const config = SECTION_CONFIGS.agents;
@@ -386,7 +401,7 @@ export default function Sidebar({ categories, agentTeams }: SidebarProps) {
         <SidebarItem
           key={team}
           href={`/agents/${team.toLowerCase()}`}
-          label={team}
+          label={getTeamLabel(team)}
           isActive={isActive}
           itemKey={`agent-${team}`}
           hoveredItem={hoveredItem}
@@ -398,7 +413,7 @@ export default function Sidebar({ categories, agentTeams }: SidebarProps) {
         />
       );
     }),
-    [agentTeams, hoveredItem, setHoveredItem, isActiveAgentTeam]
+    [agentTeams, hoveredItem, setHoveredItem, isActiveAgentTeam, getTeamLabel]
   );
 
   const musicKitItem = useMemo(() => {
@@ -408,7 +423,7 @@ export default function Sidebar({ categories, agentTeams }: SidebarProps) {
     return (
       <SidebarItem
         href="/music-kits"
-        label="Music Kits"
+        label={t("nav.musicKits")}
         isActive={isActive}
         itemKey="music-kits"
         hoveredItem={hoveredItem}
@@ -434,7 +449,7 @@ export default function Sidebar({ categories, agentTeams }: SidebarProps) {
         }
       />
     );
-  }, [hoveredItem, setHoveredItem, isMusicKitsActive]);
+  }, [hoveredItem, setHoveredItem, isMusicKitsActive, t]);
 
   return (
     <nav 
@@ -449,7 +464,7 @@ export default function Sidebar({ categories, agentTeams }: SidebarProps) {
         <div className="space-y-8 pb-6">
           {/* Weapons Section */}
           <SidebarSection
-            title={SECTION_CONFIGS.weapons.title}
+            title={t("sidebar.weapons")}
             icon={SECTION_CONFIGS.weapons.icon}
             iconColor={SECTION_CONFIGS.weapons.iconColor}
             gradientFrom={SECTION_CONFIGS.weapons.gradientFrom}
@@ -465,7 +480,7 @@ export default function Sidebar({ categories, agentTeams }: SidebarProps) {
           {agentTeams && agentTeams.length > 0 && (
             <>
               <SidebarSection
-                title={SECTION_CONFIGS.agents.title}
+                title={t("sidebar.agents")}
                 icon={SECTION_CONFIGS.agents.icon}
                 iconColor={SECTION_CONFIGS.agents.iconColor}
                 gradientFrom={SECTION_CONFIGS.agents.gradientFrom}
@@ -481,7 +496,7 @@ export default function Sidebar({ categories, agentTeams }: SidebarProps) {
 
           {/* Music Kits Section */}
           <SidebarSection
-            title={SECTION_CONFIGS.special.title}
+            title={t("sidebar.special")}
             icon={SECTION_CONFIGS.special.icon}
             iconColor={SECTION_CONFIGS.special.iconColor}
             gradientFrom={SECTION_CONFIGS.special.gradientFrom}

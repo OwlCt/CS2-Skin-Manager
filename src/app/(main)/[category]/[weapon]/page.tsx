@@ -1,11 +1,10 @@
 import { getSkinsForWeapon } from "@/lib/data";
 import { notFound } from "next/navigation";
-import AppBreadcrumb, { AppBreadcrumbItem } from "@/components/nav/Breadcrumb";
-import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { PrismaClient } from "@prisma/client";
 import SkinGrid from "@/components/skins/SkinGrid";
 import ScrollToHash from "@/components/skins/ScrollToHash";
+import WeaponPageBreadcrumb from "@/components/nav/WeaponPageBreadcrumb";
 
 interface WeaponPageProps {
   params: Promise<{
@@ -58,25 +57,18 @@ export default async function WeaponPage({ params }: WeaponPageProps) {
 
   const categoryDisplayName =
     categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
-  const weaponDisplayName = skins
-    .find((s) => s.weapon_name.toLowerCase() === weaponKey.toLowerCase())!
-    .paint_name.split(" | ")[0];
+  const firstSkin = skins.find((s) => s.weapon_name.toLowerCase() === weaponKey.toLowerCase())!;
+  const weaponDisplayName = firstSkin.paint_name.split(" | ")[0];
+  const weaponDefindex = firstSkin.weapon_defindex;
 
   return (
     <div className="p-6">
-      <AppBreadcrumb>
-        <AppBreadcrumbItem>
-          <Link href="/">Home</Link>
-        </AppBreadcrumbItem>
-        <AppBreadcrumbItem>
-          {/* Use the lowercase 'categoryName' for the URL */}
-          <Link href={`/${categoryName}`}>
-            {/* Use the capitalized 'categoryDisplayName' for the text */}
-            {categoryDisplayName}
-          </Link>
-        </AppBreadcrumbItem>
-        <AppBreadcrumbItem isCurrent>{weaponDisplayName}</AppBreadcrumbItem>
-      </AppBreadcrumb>
+      <WeaponPageBreadcrumb
+        categoryName={categoryName}
+        categoryDisplayName={categoryDisplayName}
+        weaponDisplayName={weaponDisplayName}
+        weaponDefindex={weaponDefindex}
+      />
 
       <ScrollToHash />
       <SkinGrid userConfigs={userConfigs} skins={skins} />

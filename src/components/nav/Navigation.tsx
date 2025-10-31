@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserNav from "@/components/nav/UserNav";
-import LanguageSwitcher from "@/components/nav/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Suspense, lazy } from "react";
 const MobileMenu = lazy(() => import("@/components/nav/MobileMenu"));
@@ -81,7 +80,6 @@ export default function Navigation({
         </div>
 
         <div className="flex items-center gap-2">
-          <LanguageSwitcher />
           {user && <UserNav user={user} />}
         </div>
       </header>
