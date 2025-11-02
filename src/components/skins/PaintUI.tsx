@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import StickerSelector from "@/components/skins/StickerSelector";
 import KeychainSelector from "@/components/skins/KeychainSelector";
-import { isKnife, isGlove } from "@/lib/weapons";
+import { isKnife, isGlove, isTeamSpecific, getRequiredTeam } from "@/lib/weapons";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -47,19 +47,22 @@ export default function PaintUI({
   keychains: Keychain[];
 }) {
   // Translation hooks
-  const { getSkinName, getWearName, loading: translationLoading } = useTranslation();
+  const { getSkinName, getWearName, getStickerName, getKeychainName, loading: translationLoading } = useTranslation();
   const { t } = useLanguage();
 
   // Determine weapon type
   const weaponDefindex = skin.weapon_defindex;
   const isKnifeWeapon = isKnife(weaponDefindex);
   const isGloveWeapon = isGlove(weaponDefindex);
+  const isTeamSpecificWeapon = isTeamSpecific(weaponDefindex);
+  const requiredTeam = getRequiredTeam(weaponDefindex);
 
   // Feature availability based on weapon type
   const canHaveStickers = !isKnifeWeapon && !isGloveWeapon;
   const canHaveKeychains = !isKnifeWeapon && !isGloveWeapon;
   const canHaveStatTrak = !isGloveWeapon;
   const canHaveNametag = !isGloveWeapon;
+  const canSelectTeam = !isTeamSpecificWeapon;
 
   const [selectedWear, setSelectedWear] = useState("Factory New");
   const [customWearValue, setCustomWearValue] = useState(0.000001);
@@ -69,7 +72,13 @@ export default function PaintUI({
   const [nameTag, setNameTag] = useState("");
   const [statTrak, setStatTrak] = useState(false);
   const [kills, setKills] = useState(0);
-  const [activeTab, setActiveTab] = useState("T");
+  // Set default team based on weapon restrictions
+  const getInitialTeam = () => {
+    if (requiredTeam === 2) return "T";
+    if (requiredTeam === 3) return "CT";
+    return "T";
+  };
+  const [activeTab, setActiveTab] = useState(getInitialTeam());
   const [saveLoading, setSaveLoading] = useState(false);
   const router = useRouter();
 
@@ -346,58 +355,61 @@ export default function PaintUI({
               className="mt-4 flex flex-col gap-2 md:gap-4 justify-center w-full"
               variants={itemVariants}
             >
-              <div className="flex gap-2 md:gap-4 flex-wrap justify-center">
-                {["T", "Both", "CT"].map((team) => (
-                  <Tooltip key={team}>
-                    <TooltipTrigger asChild>
-                      <motion.button
-                        onClick={() => setActiveTab(team)}
-                        className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 border ${
-                          activeTab === team
-                            ? "bg-primary text-primary-foreground border-primary shadow"
-                            : "bg-muted/40 backdrop-blur-md border-border text-muted-foreground hover:bg-muted/60"
-                        }`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {team === "T" ? (
-                          <Image
-                            src={TLogo}
-                            alt="T"
-                            className="inline-block h-6 w-6 md:h-8 md:w-8"
-                          />
-                        ) : team === "CT" ? (
-                          <Image
-                            src={CTLogo}
-                            alt="CT"
-                            className="inline-block h-6 w-6 md:h-8 md:w-8"
-                          />
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <Image
-                              src={CTLogo}
-                              alt="CT"
-                              className="inline-block h-6 w-6 md:h-8 md:w-8"
-                            />
+              {/* Only show team selection for weapons that can be used by both teams */}
+              {canSelectTeam && (
+                <div className="flex gap-2 md:gap-4 flex-wrap justify-center">
+                  {["T", "Both", "CT"].map((team) => (
+                    <Tooltip key={team}>
+                      <TooltipTrigger asChild>
+                        <motion.button
+                          onClick={() => setActiveTab(team)}
+                          className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 border ${
+                            activeTab === team
+                              ? "bg-primary text-primary-foreground border-primary shadow"
+                              : "bg-muted/40 backdrop-blur-md border-border text-muted-foreground hover:bg-muted/60"
+                          }`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {team === "T" ? (
                             <Image
                               src={TLogo}
                               alt="T"
                               className="inline-block h-6 w-6 md:h-8 md:w-8"
                             />
-                          </div>
-                        )}
-                      </motion.button>
-                    </TooltipTrigger>
-                    <TooltipContent sideOffset={8}>
-                      {team === "T"
-                        ? t("team.applyT")
-                        : team === "CT"
-                        ? t("team.applyCT")
-                        : t("team.applyBoth")}
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
+                          ) : team === "CT" ? (
+                            <Image
+                              src={CTLogo}
+                              alt="CT"
+                              className="inline-block h-6 w-6 md:h-8 md:w-8"
+                            />
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <Image
+                                src={CTLogo}
+                                alt="CT"
+                                className="inline-block h-6 w-6 md:h-8 md:w-8"
+                              />
+                              <Image
+                                src={TLogo}
+                                alt="T"
+                                className="inline-block h-6 w-6 md:h-8 md:w-8"
+                              />
+                            </div>
+                          )}
+                        </motion.button>
+                      </TooltipTrigger>
+                      <TooltipContent sideOffset={8}>
+                        {team === "T"
+                          ? t("team.applyT")
+                          : team === "CT"
+                          ? t("team.applyCT")
+                          : t("team.applyBoth")}
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => router.back()}
@@ -585,7 +597,7 @@ export default function PaintUI({
                               </TooltipTrigger>
                               <TooltipContent>
                                 {sticker
-                                  ? sticker.name.replace("Sticker | ", "")
+                                  ? (getStickerName(sticker.id) || sticker.name).replace(/^(Sticker \| |印花 \| )/, "")
                                   : `${t("skin.addStickerSlot")} ${i + 1}`}
                               </TooltipContent>
                             </Tooltip>
@@ -625,7 +637,7 @@ export default function PaintUI({
                             </TooltipTrigger>
                             <TooltipContent>
                               {selectedKeychain
-                                ? selectedKeychain.name.replace("Charm | ", "")
+                                ? (getKeychainName(selectedKeychain.id) || selectedKeychain.name).replace(/^(Charm \| |挂件 \| )/, "")
                                 : t("skin.addKeychain")}
                             </TooltipContent>
                           </Tooltip>

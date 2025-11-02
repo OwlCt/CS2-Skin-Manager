@@ -56,3 +56,61 @@ export const isKnife = (weaponDefindex: number): boolean => {
 export const isGlove = (weaponDefindex: number): boolean => {
   return GLOVE_DEFINDEXES.includes(weaponDefindex);
 };
+
+// Team-specific weapon defindexes
+// T-only weapons (team value: 2)
+export const T_ONLY_DEFINDEXES = [
+  7,  // weapon_ak47
+  13, // weapon_galilar
+  39, // weapon_sg556
+  17, // weapon_mac10
+  30, // weapon_tec9
+  29, // weapon_sawedoff
+  4,  // weapon_glock
+  11, // weapon_g3sg1
+];
+
+// CT-only weapons (team value: 3)
+export const CT_ONLY_DEFINDEXES = [
+  16, // weapon_m4a1
+  60, // weapon_m4a1_silencer
+  10, // weapon_famas
+  8,  // weapon_aug
+  34, // weapon_mp9
+  27, // weapon_mag7
+  3,  // weapon_fiveseven
+  32, // weapon_hkp2000
+  61, // weapon_usp_silencer
+  38, // weapon_scar20
+];
+
+/**
+ * Check if a weapon is T-only
+ */
+export const isTOnly = (weaponDefindex: number): boolean => {
+  return T_ONLY_DEFINDEXES.includes(weaponDefindex);
+};
+
+/**
+ * Check if a weapon is CT-only
+ */
+export const isCTOnly = (weaponDefindex: number): boolean => {
+  return CT_ONLY_DEFINDEXES.includes(weaponDefindex);
+};
+
+/**
+ * Check if a weapon is team-specific (either T-only or CT-only)
+ */
+export const isTeamSpecific = (weaponDefindex: number): boolean => {
+  return isTOnly(weaponDefindex) || isCTOnly(weaponDefindex);
+};
+
+/**
+ * Get the required team for a weapon
+ * @returns 2 for T-only, 3 for CT-only, 0 for both teams
+ */
+export const getRequiredTeam = (weaponDefindex: number): number => {
+  if (isTOnly(weaponDefindex)) return 2;
+  if (isCTOnly(weaponDefindex)) return 3;
+  return 0;
+};
