@@ -25,7 +25,20 @@ export default function Navigation({
   agentTeams,
 }: NavigationProps) {
   const [open, setOpen] = useState(false);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  // Handle server connection
+  const handleJoinServer = () => {
+    // Get server configuration from environment variables
+    const serverIP = process.env.NEXT_PUBLIC_SERVER_IP || "127.0.0.1";
+    const serverPort = process.env.NEXT_PUBLIC_SERVER_PORT || "27015";
+
+    // Steam connect URL format for CS2 (App ID: 730)
+    const steamConnectUrl = `steam://rungameid/730//+connect ${serverIP}:${serverPort}`;
+
+    // Try to open Steam connection
+    window.location.href = steamConnectUrl;
+  };
 
   // Keyboard shortcut to open search (no changes here)
   useEffect(() => {
@@ -80,6 +93,19 @@ export default function Navigation({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Join Server Button */}
+          <Button
+            size="sm"
+            onClick={handleJoinServer}
+            className="hidden md:flex bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+          >
+            <img
+              src="/cs2-icon.png"
+              alt="CS2"
+              className="h-4 w-4 mr-2"
+            />
+            {language === "zh-CN" ? "点击进入服务器" : "Click to Join Server"}
+          </Button>
           {user && <UserNav user={user} />}
         </div>
       </header>

@@ -45,17 +45,39 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get optional category and weapon parameters for organized cache storage
+    const category = searchParams.get("category");
+    const weapon = searchParams.get("weapon");
+
     // Generate cache filename using hash of full URL
     const urlHash = crypto.createHash("md5").update(imageUrl).digest("hex");
     const fileExtension = path.extname(url.pathname) || ".jpg";
     const cacheFileName = `${urlHash}${fileExtension}`;
-    const cachePath = path.join(
-      process.cwd(),
-      "public",
-      "cache",
-      "images",
-      cacheFileName
-    );
+
+    // Build cache path with optional category/weapon organization
+    let cachePath: string;
+    if (category && weapon) {
+      // Organized storage: cache/{category}/{weapon}/{hash}.ext
+      const sanitizedCategory = category.toLowerCase().replace(/[^a-z0-9_-]/g, "_");
+      const sanitizedWeapon = weapon.toLowerCase().replace(/[^a-z0-9_-]/g, "_");
+      cachePath = path.join(
+        process.cwd(),
+        "public",
+        "cache",
+        sanitizedCategory,
+        sanitizedWeapon,
+        cacheFileName
+      );
+    } else {
+      // Fallback to flat storage: cache/images/{hash}.ext
+      cachePath = path.join(
+        process.cwd(),
+        "public",
+        "cache",
+        "images",
+        cacheFileName
+      );
+    }
 
     // Check if image is already cached
     try {
@@ -88,6 +110,10 @@ export async function GET(request: NextRequest) {
 
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
+
+      // Ensure cache directory exists before writing
+      const cacheDir = path.dirname(cachePath);
+      await fs.mkdir(cacheDir, { recursive: true });
 
       // Save to cache (permanent storage)
       await fs.writeFile(cachePath, buffer);

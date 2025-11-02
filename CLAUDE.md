@@ -133,6 +133,11 @@ Required variables (see `.env.example`):
 - `STEAM_API_KEY`: Steam Web API key from https://steamcommunity.com/dev/apikey
 - `NEXT_PUBLIC_URL`: Full app URL (e.g., `http://localhost:3000` for dev)
 
+Optional configuration:
+- `ENABLE_IMAGE_CACHE`: Enable/disable local image caching (default: `true`)
+  - Set to `"true"` to cache images locally (useful for regions with CDN access issues)
+  - Set to `"false"` to load images directly from CDN (recommended for stable CDN access)
+
 ## Data Extraction Scripts
 
 The `scripts/` directory contains Node.js scripts to extract game data from CS2 game files:
@@ -140,8 +145,66 @@ The `scripts/` directory contains Node.js scripts to extract game data from CS2 
 - `extract-agents.js`: Extracts agent data to `data/agents.json`
 - `extract-music-kits.js`: Extracts music kit data to `data/music_kits.json`
 - `fetch-translations.js`: Fetches multilingual translations from CSGO-API to `public/data/translations/`
+- `migrate-cache.js`: Migrates old flat cache structure to organized category/weapon structure
 
 These are run manually when CS2 game data is updated and should not be part of the build process.
+
+## Image Caching
+
+The application includes an intelligent image caching system to improve performance in regions with poor CDN access.
+
+### Architecture
+
+**Cache Toggle**: Controlled by `ENABLE_IMAGE_CACHE` environment variable
+- When enabled (default): Images are cached locally in organized directory structure
+- When disabled: Images load directly from Steam CDN (no caching overhead)
+
+**Cache Structure**: Images are organized by content type for better management
+```
+public/cache/
+├── gloves/              # Weapon skins - Gloves
+│   ├── leather_handwraps/
+│   │   └── {md5hash}.jpg
+│   └── sport_gloves/
+│       └── {md5hash}.jpg
+├── rifles/              # Weapon skins - Rifles
+│   ├── ak-47/
+│   └── m4a1/
+├── agents/              # Agent images by team
+│   ├── terrorists/
+│   └── counter-terrorists/
+├── stickers/            # Sticker images by tournament/type
+│   ├── 2013_dreamhack_winter/
+│   └── event/
+├── keychains/           # Keychain images by collection
+│   ├── missing_link/
+│   └── clutch/
+├── music-kits/          # Music kit images (flat)
+└── images/              # Fallback for uncategorized images
+```
+
+**Key Files**:
+- `src/lib/image-proxy.ts`: URL transformation utilities
+  - `getProxiedImageUrl()`: Converts CDN URLs to proxied URLs (or returns original if caching disabled)
+  - `proxyImageUrls()`: Batch processes image URLs in data objects, automatically detecting category/weapon
+- `src/app/api/image-proxy/route.ts`: API endpoint that handles image fetching and caching
+  - Supports optional `category` and `weapon` parameters for organized storage
+  - Automatically creates directory structure as needed
+
+**How It Works**:
+1. `proxyImageUrls()` is called in data loading functions (`getSkinsData()`, `loadAgents()`)
+2. It automatically detects `category` and `weapon_name` fields in data objects
+3. When caching is enabled, URLs are transformed to `/api/image-proxy?url=...&category=...&weapon=...`
+4. When caching is disabled, original CDN URLs are returned unchanged
+5. Images are cached permanently (never auto-deleted) in organized directories
+
+**Cache Migration**:
+If you have existing cache from the old flat structure, run:
+```bash
+node scripts/migrate-cache.js
+```
+
+This will reorganize existing cached images into the new category/weapon structure.
 
 ## Internationalization (i18n)
 

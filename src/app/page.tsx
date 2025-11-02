@@ -103,7 +103,7 @@ export default function LoginPage() {
             >
               <Link href="/api/auth/steam" className="flex items-center justify-center gap-3">
                 <img
-                  src="https://vip.123pan.cn/1820390256/yk6baz03t0n000d7w33hent2voq86m3sDIYvDdD2DdiyApxPBIi1Da==.png"
+                  src="/steam-icon.png"
                   alt="Steam"
                   className="h-5 w-5"
                 />
@@ -118,7 +118,7 @@ export default function LoginPage() {
               className="w-full h-12 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
             >
               <img
-                src="https://vip.123pan.cn/1820390256/ymjew503t0m000d7w32xxffyav9ayv8gDIYvDdD2DdiyApxPBIi1Da==.png"
+                src="/cs2-icon.png"
                 alt="CS2"
                 className="h-5 w-5 mr-2"
               />
