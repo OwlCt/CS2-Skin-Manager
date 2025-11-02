@@ -5,7 +5,7 @@ import { Sticker } from "@/types/sticker";
 import { Keychain } from "@/types/keychain";
 import { motion } from "framer-motion";
 import { Settings, Star, Tag, Target, Zap } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CTLogo from "@/assets/ct_logo.svg";
 import TLogo from "@/assets/t_logo.svg";
 import {
@@ -62,7 +62,10 @@ export default function PaintUI({
   const canHaveNametag = !isGloveWeapon;
 
   const [selectedWear, setSelectedWear] = useState("Factory New");
+  const [customWearValue, setCustomWearValue] = useState(0.000001);
+  const [initialWearValue, setInitialWearValue] = useState(0.000001);
   const [seedRange, setSeedRange] = useState(500);
+  const [initialSeedRange, setInitialSeedRange] = useState(500);
   const [nameTag, setNameTag] = useState("");
   const [statTrak, setStatTrak] = useState(false);
   const [kills, setKills] = useState(0);
@@ -104,6 +107,65 @@ export default function PaintUI({
     return t(`wear.${wearKey.charAt(0).toLowerCase() + wearKey.slice(1)}`);
   };
 
+  // Determine wear level based on float value
+  function getWearLevelFromFloat(floatValue: number): string {
+    if (floatValue < 0.07) return "Factory New";
+    if (floatValue < 0.15) return "Minimal Wear";
+    if (floatValue < 0.38) return "Field-Tested";
+    if (floatValue < 0.45) return "Well-Worn";
+    return "Battle-Scarred";
+  }
+
+  // Handle wear preset selection
+  function handleWearChange(wear: string) {
+    setSelectedWear(wear);
+    setCustomWearValue(wearValues[wear]);
+  }
+
+  // Handle custom wear value input
+  function handleCustomWearChange(value: string) {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      // Clamp value between 0 and 1
+      const clampedValue = Math.max(0, Math.min(1, numValue));
+      setCustomWearValue(clampedValue);
+      // Update the wear preset selector to match the float value
+      setSelectedWear(getWearLevelFromFloat(clampedValue));
+    }
+  }
+
+  // Load current skin configuration on mount
+  useEffect(() => {
+    async function loadCurrentConfig() {
+      try {
+        const res = await fetch("/api/skins/config", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // Find the current skin config for this weapon
+          const currentConfig = data.skins?.find(
+            (s: any) =>
+              s.weapon_defindex === skin.weapon_defindex &&
+              s.weapon_paint_id === skin.paint
+          );
+          if (currentConfig) {
+            // Set initial values from database
+            setInitialWearValue(currentConfig.weapon_wear);
+            setCustomWearValue(currentConfig.weapon_wear);
+            setSelectedWear(getWearLevelFromFloat(currentConfig.weapon_wear));
+            setInitialSeedRange(currentConfig.weapon_seed);
+            setSeedRange(currentConfig.weapon_seed);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load current config:", error);
+      }
+    }
+    loadCurrentConfig();
+  }, [skin.weapon_defindex, skin.paint]);
+
   function getTeamValue(tab: string) {
     if (tab === "T") return 2;
     if (tab === "CT") return 3;
@@ -143,6 +205,29 @@ export default function PaintUI({
     });
 
     try {
+      const payload = {
+        weaponDefindex: skin.weapon_defindex,
+        weaponPaintId: skin.paint,
+        weaponTeam: getTeamValue(activeTab),
+        wear: Number(customWearValue),
+        seed: seedRange.toString(),
+        // Only send nametag if weapon supports it (not gloves)
+        nametag: canHaveNametag ? nameTag : "",
+        // Only send StatTrak if weapon supports it (not gloves)
+        stattrak: canHaveStatTrak ? statTrak : false,
+        stattrakCount: canHaveStatTrak ? kills.toString() : "0",
+        // Only send stickers if weapon supports them (not knives or gloves)
+        stickers: canHaveStickers
+          ? selectedStickers.map(formatStickerForDatabase)
+          : ["0;0;0;0;0;0;0", "0;0;0;0;0;0;0", "0;0;0;0;0;0;0", "0;0;0;0;0;0;0", "0;0;0;0;0;0;0"],
+        // Only send keychain if weapon supports it (not knives or gloves)
+        keychain: canHaveKeychains
+          ? formatKeychainForDatabase(selectedKeychain)
+          : "0;0;0;0;0",
+      };
+
+      console.log("Saving skin config:", payload);
+
       const res = await fetch("/api/skins/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -151,7 +236,7 @@ export default function PaintUI({
           weaponDefindex: skin.weapon_defindex,
           weaponPaintId: skin.paint,
           weaponTeam: getTeamValue(activeTab),
-          wear: wearValues[selectedWear],
+          wear: Number(customWearValue),
           seed: seedRange.toString(),
           // Only send nametag if weapon supports it (not gloves)
           nametag: canHaveNametag ? nameTag : "",
@@ -176,9 +261,31 @@ export default function PaintUI({
           id: "save-config",
         });
       } else {
-        toast.success(data.message || "Configuration saved!", {
+        // Check if wear value was decreased (requires reconnect)
+        const wearDecreased = customWearValue < initialWearValue;
+
+        // Check if there are other changes (requires !wp command)
+        const seedChanged = seedRange !== initialSeedRange;
+        const hasOtherChanges = seedChanged || customWearValue > initialWearValue;
+
+        let description: string | undefined;
+        if (wearDecreased) {
+          // Wear decreased: need to reconnect
+          description = t("toast.configSavedReconnect");
+        } else if (hasOtherChanges) {
+          // Other changes: use !wp command
+          description = t("toast.configSavedRefresh");
+        }
+        // else: no description (no changes or first save)
+
+        toast.success(t("toast.configSaved"), {
           id: "save-config",
+          description,
         });
+
+        // Update initial values for future comparisons
+        setInitialWearValue(customWearValue);
+        setInitialSeedRange(seedRange);
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to save configuration", {
@@ -332,15 +439,30 @@ export default function PaintUI({
                     <Star className="w-5 h-5 text-yellow-400" />
                     {t("skin.wear")}
                   </label>
-                  <motion.div className="relative" whileHover={{ scale: 1.02 }}>
+                  <motion.div className="relative mb-3" whileHover={{ scale: 1.02 }}>
                     <MotionSelect
                       options={wearOptions.map((w) => ({ value: w, label: getWearLabel(w) }))}
                       value={selectedWear}
-                      onChange={setSelectedWear}
+                      onChange={handleWearChange}
                       placeholder={t("skin.wear")}
                       className="w-full"
                     />
                   </motion.div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                      {t("wear.floatValue")} (0.00 - 1.00)
+                    </label>
+                    <motion.input
+                      type="number"
+                      value={customWearValue}
+                      onChange={(e) => handleCustomWearChange(e.target.value)}
+                      min="0"
+                      max="1"
+                      step="0.000001"
+                      className="w-full bg-muted/40 backdrop-blur-md border border-border rounded-xl px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      whileFocus={{ scale: 1.02 }}
+                    />
+                  </div>
                 </motion.div>
                 {/* Seed */}
                 <motion.div variants={itemVariants}>
@@ -348,22 +470,23 @@ export default function PaintUI({
                     <Zap className="w-5 h-5 text-blue-400" />
                     {t("skin.seed")}
                   </label>
-                  <div className="space-y-2">
-                    <input
-                      type="range"
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                      {t("wear.pattern")} (1 - 1000)
+                    </label>
+                    <motion.input
+                      type="number"
+                      value={seedRange}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 1;
+                        setSeedRange(Math.max(1, Math.min(1000, value)));
+                      }}
                       min="1"
                       max="1000"
-                      value={seedRange}
-                      onChange={(e) => setSeedRange(parseInt(e.target.value))}
-                      className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer slider"
+                      step="1"
+                      className="w-full bg-muted/40 backdrop-blur-md border border-border rounded-xl px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      whileFocus={{ scale: 1.02 }}
                     />
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>1</span>
-                      <span className="text-foreground font-medium">
-                        {seedRange}
-                      </span>
-                      <span>1000</span>
-                    </div>
                   </div>
                 </motion.div>
                 {/* Name Tag - Only for weapons and knives (not gloves) */}
@@ -537,26 +660,6 @@ export default function PaintUI({
         />
       )}
 
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: linear-gradient(45deg, #8b5cf6, #ec4899);
-          cursor: pointer;
-          box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
-        }
-        .slider::-moz-range-thumb {
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: linear-gradient(45deg, #8b5cf6, #ec4899);
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
-        }
-      `}</style>
     </div>
   );
 }

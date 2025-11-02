@@ -5,11 +5,13 @@ import { MusicKit } from "@/types/music-kit";
 import { Skins } from "@/types/skins";
 import { Sticker } from "@/types/sticker";
 import { Keychain } from "@/types/keychain";
+import { proxyImageUrls } from "@/lib/image-proxy";
 
 export async function getSkinsData(): Promise<Skins[]> {
   const filePath = path.join(process.cwd(), "data", "skins.json");
   const file = await fs.readFile(filePath, "utf8");
-  return JSON.parse(file);
+  const data = JSON.parse(file);
+  return proxyImageUrls(data);
 }
 
 export async function getWeaponsForCategory(
@@ -63,7 +65,8 @@ export async function getBaseWeapons() {
 export async function loadAgents(): Promise<Agent[]> {
   const agentsPath = path.resolve(process.cwd(), "data/agents.json");
   const raw = await fs.readFile(agentsPath, "utf-8");
-  return JSON.parse(raw);
+  const data = JSON.parse(raw);
+  return proxyImageUrls(data);
 }
 
 export function getAgentTeamsMap(): Record<string, string> {
@@ -95,17 +98,20 @@ export async function getAgentsByTeam(): Promise<Record<string, Agent[]>> {
 export async function getMusicKits(): Promise<MusicKit[]> {
   const kitsPath = path.join(process.cwd(), "data/music_kits.json");
   const raw = await fs.readFile(kitsPath, "utf-8");
-  return JSON.parse(raw);
+  const data = JSON.parse(raw);
+  return proxyImageUrls(data);
 }
 
 export async function getStickers(): Promise<Sticker[]> {
   const stickersPath = path.join(process.cwd(), "data/stickers.json");
   const raw = await fs.readFile(stickersPath, "utf-8");
-  return JSON.parse(raw);
+  const data = JSON.parse(raw);
+  return proxyImageUrls(data);
 }
 
 export async function getKeychains(): Promise<Keychain[]> {
   const keychainsPath = path.join(process.cwd(), "data/keychains.json");
   const raw = await fs.readFile(keychainsPath, "utf-8");
-  return JSON.parse(raw);
+  const data = JSON.parse(raw);
+  return proxyImageUrls(data);
 }

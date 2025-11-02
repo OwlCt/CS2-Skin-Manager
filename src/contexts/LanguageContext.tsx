@@ -103,6 +103,8 @@ const uiTranslations = {
     // Toast messages
     "toast.savingConfig": "Saving configuration...",
     "toast.configSaved": "Configuration saved!",
+    "toast.configSavedReconnect": "Please reconnect to the server to apply changes.",
+    "toast.configSavedRefresh": "Please type !wp in game chat to refresh.",
     "toast.configFailed": "Failed to save configuration",
     "toast.skinApplied": "Skin configuration applied successfully!",
     "toast.skinAppliedDesc": "has been configured with float",
@@ -222,6 +224,8 @@ const uiTranslations = {
     // Toast messages
     "toast.savingConfig": "正在保存配置...",
     "toast.configSaved": "配置已保存！",
+    "toast.configSavedReconnect": "请重新进入服务器以应用更改。",
+    "toast.configSavedRefresh": "请在游戏聊天框中输入 !wp 刷新数据。",
     "toast.configFailed": "保存配置失败",
     "toast.skinApplied": "皮肤配置应用成功！",
     "toast.skinAppliedDesc": "已配置磨损值为",

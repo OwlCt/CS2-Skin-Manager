@@ -25,6 +25,12 @@ export interface Sticker {
     id: number;
     name: string;
   };
+  team?: {
+    id: number;
+    tag: string;
+    geo: string;
+    name: string;
+  };
   image: string;
   original: {
     name: string;
