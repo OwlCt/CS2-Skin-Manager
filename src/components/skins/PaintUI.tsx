@@ -550,7 +550,7 @@ export default function PaintUI({
                 {(canHaveStickers || canHaveKeychains) && (
                   <motion.div
                     variants={itemVariants}
-                    className="flex flex-col md:flex-row gap-6 md:gap-12 mt-6 md:mt-8"
+                    className="flex flex-col gap-6 mt-6 md:mt-8"
                   >
                     {canHaveStickers && (
                       <div className="flex-1">

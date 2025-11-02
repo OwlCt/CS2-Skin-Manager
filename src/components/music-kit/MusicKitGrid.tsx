@@ -18,6 +18,7 @@ type MusicKitGridProps = {
 const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearchQuery, setActiveSearchQuery] = useState("");
   const { language, t } = useLanguage();
   const [translationMap, setTranslationMap] = useState<Map<number, string>>(new Map());
 
@@ -40,11 +41,24 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
     loadTranslations();
   }, [language, kits]);
 
+  // Manual search function
+  const handleSearch = () => {
+    setActiveSearchQuery(searchQuery);
+  };
+
+  // Handle Enter key for manual search
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+
   // Filter music kits based on search (supports both English and translated names)
   const filteredKits = useMemo(() => {
-    if (!searchQuery.trim()) return kits;
+    if (!activeSearchQuery.trim()) return kits;
 
-    const query = searchQuery.toLowerCase().trim();
+    const query = activeSearchQuery.toLowerCase().trim();
     return kits.filter(kit => {
       // Search in English name
       const matchesEnglish = kit.name.toLowerCase().includes(query);
@@ -55,7 +69,7 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
 
       return matchesEnglish || matchesTranslated;
     });
-  }, [kits, searchQuery, translationMap]);
+  }, [kits, activeSearchQuery, translationMap]);
 
   const handleMusicKitClick = async (kit: MusicKit) => {
     toast.loading(t("toast.savingConfig"), {
@@ -115,15 +129,25 @@ const MusicKitGrid: React.FC<MusicKitGridProps> = ({ kits, team }) => {
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder={`${t("nav.search").replace("...", "")} ${t("nav.musicKits").toLowerCase()}...`}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex gap-2 max-w-2xl">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={`${t("nav.search").replace("...", "")} ${t("nav.musicKits").toLowerCase()}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="pl-10"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleSearch}
+            className="px-4 h-9 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap"
+          >
+            {t("nav.search")}
+          </button>
         </div>
       </div>
 

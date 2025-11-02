@@ -15,6 +15,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Skins } from "@/types/skins";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface SearchCommandProps {
   open: boolean;
@@ -72,8 +73,10 @@ export default function SearchCommand({
   onOpenChange,
 }: SearchCommandProps) {
   const { t } = useLanguage();
+  const { getSkinName, getWeaponName, loading: translationLoading } = useTranslation();
   const [searchValue, setSearchValue] = useState("");
   const [allSkins, setAllSkins] = useState<Skins[]>([]);
+  const [displayedSkins, setDisplayedSkins] = useState<Skins[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -87,29 +90,58 @@ export default function SearchCommand({
 
   console.log(allSkins);
 
-  // Filter skins based on search value with memoization for performance
-  const filteredSkins = useMemo(() => {
-    if (!searchValue) return [];
+  // Manual search function - only triggered by button click or Enter key
+  // Supports both English and translated names
+  const handleSearch = () => {
+    if (!searchValue.trim()) {
+      setDisplayedSkins([]);
+      return;
+    }
 
-    return allSkins
-      .filter(
-        (skin) =>
-          skin.paint_name.toLowerCase().includes(searchValue.toLowerCase()) ||
-          skin.weapon_name.toLowerCase().includes(searchValue.toLowerCase()) ||
-          skin.category.toLowerCase().includes(searchValue.toLowerCase())
-      )
+    const query = searchValue.toLowerCase();
+    const filtered = allSkins
+      .filter((skin) => {
+        // Search in English names
+        const matchesEnglish =
+          skin.paint_name.toLowerCase().includes(query) ||
+          skin.weapon_name.toLowerCase().includes(query) ||
+          skin.category.toLowerCase().includes(query);
+
+        // Search in translated names (if translations are loaded)
+        if (!translationLoading) {
+          const translatedSkinName = getSkinName(skin.paint, skin.weapon_defindex);
+          const translatedWeaponName = getWeaponName(skin.weapon_defindex);
+
+          const matchesTranslated =
+            (translatedSkinName && translatedSkinName.toLowerCase().includes(query)) ||
+            (translatedWeaponName && translatedWeaponName.toLowerCase().includes(query));
+
+          return matchesEnglish || matchesTranslated;
+        }
+
+        return matchesEnglish;
+      })
       .slice(0, 8);
-  }, [searchValue, allSkins]);
+
+    setDisplayedSkins(filtered);
+  };
 
   const handleSelectSkin = (skin: Skins) => {
     onOpenChange(false);
     setSearchValue("");
+    setDisplayedSkins([]);
     router.push(
       `/${skin.category.toLowerCase()}/${skin.weapon_name}#skin-${skin.paint}`
     );
   };
 
-  const handleSearch = () => {};
+  // Handle Enter key press for manual search
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
@@ -118,28 +150,34 @@ export default function SearchCommand({
           placeholder={t("search.placeholder")}
           value={searchValue}
           onValueChange={setSearchValue}
+          onKeyDown={handleKeyDown}
         />
         <CommandList>
           <CommandEmpty>
             {isLoading ? t("search.loading") : t("search.noResults")}
           </CommandEmpty>
-          {filteredSkins.length > 0 && (
+          {displayedSkins.length > 0 && (
             <CommandGroup heading={t("search.skins")}>
-              {filteredSkins.map((skin) => (
-                <CommandItem
-                  key={`${skin.paint}`}
-                  value={skin.paint_name}
-                  onSelect={() => handleSelectSkin(skin)}
-                  className="flex items-center gap-3 p-3"
-                >
-                  <SkinImage skin={skin} />
-                  <div className="flex flex-col gap-1 flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">
-                      {skin.paint_name}
+              {displayedSkins.map((skin) => {
+                const translatedSkinName = getSkinName(skin.paint, skin.weapon_defindex);
+                const displayName = translatedSkinName || skin.paint_name;
+
+                return (
+                  <CommandItem
+                    key={`${skin.paint}`}
+                    value={skin.paint_name}
+                    onSelect={() => handleSelectSkin(skin)}
+                    className="flex items-center gap-3 p-3"
+                  >
+                    <SkinImage skin={skin} />
+                    <div className="flex flex-col gap-1 flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">
+                        {displayName}
+                      </div>
                     </div>
-                  </div>
-                </CommandItem>
-              ))}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           )}
           {searchValue && (

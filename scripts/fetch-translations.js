@@ -9,6 +9,8 @@ const endpoints = [
   { name: "agents", path: "agents.json" },
   { name: "music_kits", path: "music_kits.json" },
   { name: "base_weapons", path: "base_weapons.json" },
+  { name: "stickers", path: "stickers.json" },
+  { name: "keychains", path: "keychains.json" },
 ];
 
 const languages = ["en", "zh-CN"];

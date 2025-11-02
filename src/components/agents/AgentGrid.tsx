@@ -18,6 +18,7 @@ type AgentGridProps = {
 export default function AgentGrid({ agents, teamName }: AgentGridProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearchQuery, setActiveSearchQuery] = useState("");
   const { language, t } = useLanguage();
   const [translationMap, setTranslationMap] = useState<Map<string, string>>(new Map());
 
@@ -40,11 +41,24 @@ export default function AgentGrid({ agents, teamName }: AgentGridProps) {
     loadTranslations();
   }, [language, agents]);
 
+  // Manual search function
+  const handleSearch = () => {
+    setActiveSearchQuery(searchQuery);
+  };
+
+  // Handle Enter key for manual search
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+
   // Filter agents based on search (supports both English and translated names)
   const filteredAgents = useMemo(() => {
-    if (!searchQuery.trim()) return agents;
+    if (!activeSearchQuery.trim()) return agents;
 
-    const query = searchQuery.toLowerCase().trim();
+    const query = activeSearchQuery.toLowerCase().trim();
     return agents.filter(agent => {
       // Search in English name
       const matchesEnglish = agent.agent_name.toLowerCase().includes(query);
@@ -55,7 +69,7 @@ export default function AgentGrid({ agents, teamName }: AgentGridProps) {
 
       return matchesEnglish || matchesTranslated;
     });
-  }, [agents, searchQuery, translationMap]);
+  }, [agents, activeSearchQuery, translationMap]);
 
   const handleAgentClick = async (agent: Agent) => {
     if (!agent.team) {
@@ -119,15 +133,25 @@ export default function AgentGrid({ agents, teamName }: AgentGridProps) {
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder={`${t("nav.search").replace("...", "")} ${t("nav.agents").toLowerCase()}...`}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex gap-2 max-w-2xl">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={`${t("nav.search").replace("...", "")} ${t("nav.agents").toLowerCase()}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="pl-10"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleSearch}
+            className="px-4 h-9 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap"
+          >
+            {t("nav.search")}
+          </button>
         </div>
       </div>
 

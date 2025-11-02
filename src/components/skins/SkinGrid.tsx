@@ -18,12 +18,26 @@ export default function SkinGrid({ skins, userConfigs }: SkinGridProps) {
   const { t } = useLanguage();
   const { getSkinName, getPatternName, loading: translationLoading } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearchQuery, setActiveSearchQuery] = useState("");
+
+  // Manual search function
+  const handleSearch = () => {
+    setActiveSearchQuery(searchQuery);
+  };
+
+  // Handle Enter key for manual search
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
 
   // Filter skins based on search (supports both English and translated names)
   const filteredSkins = useMemo(() => {
-    if (!searchQuery.trim()) return skins;
+    if (!activeSearchQuery.trim()) return skins;
 
-    const query = searchQuery.toLowerCase().trim();
+    const query = activeSearchQuery.toLowerCase().trim();
     return skins.filter(skin => {
       // Search in English names
       const matchesEnglish =
@@ -44,7 +58,7 @@ export default function SkinGrid({ skins, userConfigs }: SkinGridProps) {
 
       return matchesEnglish;
     });
-  }, [skins, searchQuery, translationLoading, getSkinName, getPatternName]);
+  }, [skins, activeSearchQuery, translationLoading, getSkinName, getPatternName]);
 
   return (
     <div className="space-y-6">
@@ -60,15 +74,25 @@ export default function SkinGrid({ skins, userConfigs }: SkinGridProps) {
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder={t("search.placeholder")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex gap-2 max-w-2xl">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={t("search.placeholder")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="pl-10"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleSearch}
+            className="px-4 h-9 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap"
+          >
+            {t("nav.search")}
+          </button>
         </div>
       </div>
 

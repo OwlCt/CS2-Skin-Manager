@@ -292,6 +292,83 @@ export function useTranslation() {
     return wearMap[wearId] || "";
   };
 
+  /**
+   * Get translated sticker name by sticker ID
+   */
+  const getStickerName = (stickerId: string): string => {
+    if (!translations?.stickers) return "";
+
+    const sticker = translations.stickers.find((s: any) => s.id === stickerId);
+    return sticker?.name || "";
+  };
+
+  /**
+   * Get translated sticker rarity by sticker ID
+   */
+  const getStickerRarity = (stickerId: string): string => {
+    if (!translations?.stickers) return "";
+
+    const sticker = translations.stickers.find((s: any) => s.id === stickerId);
+    return sticker?.rarity?.name || "";
+  };
+
+  /**
+   * Get translated sticker tournament name by sticker ID
+   */
+  const getStickerTournament = (stickerId: string): string => {
+    if (!translations?.stickers) return "";
+
+    const sticker = translations.stickers.find((s: any) => s.id === stickerId);
+    return sticker?.tournament?.name || "";
+  };
+
+  /**
+   * Get translated sticker collection/crate name by sticker ID and index
+   */
+  const getStickerCollection = (stickerId: string, index: number = 0): string => {
+    if (!translations?.stickers) return "";
+
+    const sticker = translations.stickers.find((s: any) => s.id === stickerId);
+    if (!sticker) return "";
+
+    // Try collections first, then crates
+    const collection = sticker.collections?.[index] || sticker.crates?.[index];
+    return collection?.name || "";
+  };
+
+  /**
+   * Get translated keychain name by keychain ID
+   */
+  const getKeychainName = (keychainId: string): string => {
+    if (!translations?.keychains) return "";
+
+    const keychain = translations.keychains.find((k: any) => k.id === keychainId);
+    return keychain?.name || "";
+  };
+
+  /**
+   * Get translated keychain rarity by keychain ID
+   */
+  const getKeychainRarity = (keychainId: string): string => {
+    if (!translations?.keychains) return "";
+
+    const keychain = translations.keychains.find((k: any) => k.id === keychainId);
+    return keychain?.rarity?.name || "";
+  };
+
+  /**
+   * Get translated keychain collection name by keychain ID and index
+   */
+  const getKeychainCollection = (keychainId: string, index: number = 0): string => {
+    if (!translations?.keychains) return "";
+
+    const keychain = translations.keychains.find((k: any) => k.id === keychainId);
+    if (!keychain) return "";
+
+    const collection = keychain.collections?.[index];
+    return collection?.name || "";
+  };
+
   return {
     loading,
     getSkinName,
@@ -304,5 +381,12 @@ export function useTranslation() {
     getCategoryName,
     getRarityName,
     getWearName,
+    getStickerName,
+    getStickerRarity,
+    getStickerTournament,
+    getStickerCollection,
+    getKeychainName,
+    getKeychainRarity,
+    getKeychainCollection,
   };
 }

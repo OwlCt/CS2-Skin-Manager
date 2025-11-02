@@ -24,11 +24,25 @@ export default function WeaponList({
   const { t } = useLanguage();
   const { getWeaponNameByKey, loading: translationLoading } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearchQuery, setActiveSearchQuery] = useState("");
 
   // Translate category name
   const getCategoryLabel = (category: string) => {
     const categoryKey = `category.${category.toLowerCase()}`;
     return t(categoryKey);
+  };
+
+  // Manual search function
+  const handleSearch = () => {
+    setActiveSearchQuery(searchQuery);
+  };
+
+  // Handle Enter key for manual search
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSearch();
+    }
   };
 
   // Process weapon data
@@ -52,9 +66,9 @@ export default function WeaponList({
 
   // Filter weapons based on search (supports both English and translated names)
   const filteredWeapons = useMemo(() => {
-    if (!searchQuery.trim()) return processedWeapons;
+    if (!activeSearchQuery.trim()) return processedWeapons;
 
-    const query = searchQuery.toLowerCase().trim();
+    const query = activeSearchQuery.toLowerCase().trim();
     return processedWeapons.filter(weapon => {
       if (!weapon) return false;
 
@@ -70,7 +84,7 @@ export default function WeaponList({
 
       return matchesEnglish;
     });
-  }, [processedWeapons, searchQuery, translationLoading, getWeaponNameByKey]);
+  }, [processedWeapons, activeSearchQuery, translationLoading, getWeaponNameByKey]);
 
   // Loading state
   if (!baseWeapons) {
@@ -100,15 +114,25 @@ export default function WeaponList({
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder={`${t("nav.search").replace("...", "")} ${getCategoryLabel(categoryName).toLowerCase()}...`}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex gap-2 max-w-2xl">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={`${t("nav.search").replace("...", "")} ${getCategoryLabel(categoryName).toLowerCase()}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="pl-10"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleSearch}
+            className="px-4 h-9 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap"
+          >
+            {t("nav.search")}
+          </button>
         </div>
       </div>
 
