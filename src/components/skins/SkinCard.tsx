@@ -20,7 +20,6 @@ export default function SkinCard({ skin, userConfig }: SkinCardProps) {
   const [isHighlighted, setIsHighlighted] = useState(false);
   const { getPatternName, loading } = useTranslation();
   const { t } = useLanguage();
-  console.log(userConfig);
 
   useEffect(() => {
     const handleHashHighlight = (event: CustomEvent) => {

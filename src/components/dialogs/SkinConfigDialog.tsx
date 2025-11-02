@@ -34,11 +34,9 @@ export default function SkinConfigDialog({
 
   // Initialize team based on the skin's team assignment
   const getInitialTeam = (): "ct" | "t" | "both" => {
-    console.log("Skin team data:", { id: skin.team.id, name: skin.team.name });
     if (skin.team.id === "both") return "both";
     if (skin.team.id === "counter-terrorists") return "ct";
     if (skin.team.id === "terrorists") return "t";
-    console.log("Falling back to 'both' for team:", skin.team.id);
     return "both"; // fallback
   };
 
@@ -52,8 +50,6 @@ export default function SkinConfigDialog({
   }, [skin.id, skin.team.id]);
 
   const handleSave = () => {
-    console.log("Saving config with team:", team, "for skin:", skin.name);
-
     try {
       onSave({ team, wear, seed });
 

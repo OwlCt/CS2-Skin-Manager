@@ -88,8 +88,6 @@ export default function SearchCommand({
       .finally(() => setIsLoading(false));
   }, []);
 
-  console.log(allSkins);
-
   // Manual search function - only triggered by button click or Enter key
   // Supports both English and translated names
   const handleSearch = () => {

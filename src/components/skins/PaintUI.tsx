@@ -235,8 +235,6 @@ export default function PaintUI({
           : "0;0;0;0;0",
       };
 
-      console.log("Saving skin config:", payload);
-
       const res = await fetch("/api/skins/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

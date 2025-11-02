@@ -32,16 +32,11 @@ export default function AgentConfigDialog({
 
   // Initialize team based on the agent's team assignment
   const getInitialTeam = (): "ct" | "t" => {
-    console.log("Agent team data:", {
-      id: agent.team.id,
-      name: agent.team.name,
-    });
     if (agent.team.id === "counter-terrorists") return "ct";
     if (agent.team.id === "terrorists") return "t";
     // Default based on agent team name from agents.json
     if (agent.team.name === "Counter-Terrorist") return "ct";
     if (agent.team.name === "Terrorist") return "t";
-    console.log("Falling back to 'ct' for team:", agent.team.id);
     return "ct"; // fallback
   };
 
@@ -53,13 +48,6 @@ export default function AgentConfigDialog({
   }, [agent.id, agent.team.id]);
 
   const handleSave = () => {
-    console.log(
-      "Saving agent config with team:",
-      team,
-      "for agent:",
-      agent.name
-    );
-
     try {
       onSave({
         team,

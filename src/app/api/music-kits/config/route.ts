@@ -82,14 +82,6 @@ export async function POST(request: NextRequest) {
         }),
       ]);
 
-      console.log("Music kit configuration saved for both teams:", {
-        steamid,
-        team,
-        defIndex,
-        musicId,
-        results,
-      });
-
       return NextResponse.json({
         success: true,
         message: "Music kit configuration saved successfully for both teams",
@@ -112,14 +104,6 @@ export async function POST(request: NextRequest) {
         weapon_team: team,
         music_id: musicId,
       },
-    });
-
-    console.log("Music kit configuration saved:", {
-      steamid,
-      team,
-      defIndex,
-      musicId,
-      result,
     });
 
     return NextResponse.json({

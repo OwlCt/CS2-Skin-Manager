@@ -63,12 +63,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log("Agent configuration saved:", {
-      steamid,
-      team,
-      modelPlayer,
-    });
-
     return NextResponse.json({
       success: true,
       message: "Agent configuration saved successfully",

@@ -42,5 +42,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# image cache
-/public/cache/images/
+# image cache - exclude all cached images except README
+/public/cache/*
+!/public/cache/README.md
+
+# local AI files
+AGENTS.md
+CLAUDE.md
+.claude/

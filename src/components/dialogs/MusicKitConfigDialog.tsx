@@ -32,8 +32,6 @@ export default function MusicKitConfigDialog({
   const [team, setTeam] = useState<"ct" | "t">("ct");
 
   const handleSave = () => {
-    console.log("Saving music kit config for:", musicKit.name, "team:", team);
-
     try {
       onSave({
         team,
