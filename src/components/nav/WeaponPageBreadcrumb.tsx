@@ -34,11 +34,8 @@ export default function WeaponPageBreadcrumb({
     const translated = getWeaponName(weaponDefindex);
     if (!translated) return weaponDisplayName;
 
-    // For knives (which start with ★), add the star back in Chinese format
-    if (weaponDisplayName.startsWith("★ ")) {
-      return `${translated}（★）`;
-    }
-
+    // getWeaponName() already handles adding star symbols for knives
+    // so we just return the translated name directly
     return translated;
   })();
 

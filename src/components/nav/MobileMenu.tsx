@@ -17,6 +17,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MobileMenuProps {
   categories: Record<string, string[]>;
@@ -25,6 +26,7 @@ interface MobileMenuProps {
 
 export default function MobileMenu(props: MobileMenuProps) {
   const { categories, agentTeams } = props;
+  const { t } = useLanguage();
 
   return (
     <div className="lg:hidden">
@@ -37,17 +39,30 @@ export default function MobileMenu(props: MobileMenuProps) {
         </DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Menu</DrawerTitle>
+            <DrawerTitle>{t("nav.weapons")}</DrawerTitle>
           </DrawerHeader>
           <div className="p-4 overflow-y-auto max-h-[80vh]">
-            <MobileSidebar categories={categories} agentTeams={agentTeams} />
+            <MobileSidebar categories={categories} agentTeams={agentTeams} t={t} />
           </div>
         </DrawerContent>
       </Drawer>
     </div>
   );
 
-  function MobileSidebar({ categories, agentTeams }: MobileMenuProps) {
+  function MobileSidebar({ categories, agentTeams, t }: MobileMenuProps & { t: (key: string) => string }) {
+    // Helper function to translate category names
+    const getCategoryLabel = (category: string) => {
+      const categoryKey = `category.${category.toLowerCase()}`;
+      return t(categoryKey);
+    };
+
+    // Helper function to translate team names
+    const getTeamLabel = (team: string) => {
+      if (team.toLowerCase() === "counter-terrorists") return t("team.counterTerrorists");
+      if (team.toLowerCase() === "terrorists") return t("team.terrorists");
+      return team;
+    };
+
     return (
       <nav className="space-y-8">
         {/* Weapons Section */}
@@ -57,7 +72,7 @@ export default function MobileMenu(props: MobileMenuProps) {
               <Folder className="w-4 h-4 text-blue-400" />
             </div>
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-              Weapons
+              {t("sidebar.weapons")}
             </h2>
             <span className="ml-auto text-xs bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-white/10 px-2 py-1 rounded">
               {Object.keys(categories).length}
@@ -70,7 +85,7 @@ export default function MobileMenu(props: MobileMenuProps) {
                 key={category}
                 className="block px-4 py-2 rounded hover:bg-accent/30 transition-all"
               >
-                <span className="font-medium">{category}</span>
+                <span className="font-medium">{getCategoryLabel(category)}</span>
                 <span className="ml-2 text-xs text-muted-foreground">
                   {categories[category]?.length || 0}
                 </span>
@@ -88,7 +103,7 @@ export default function MobileMenu(props: MobileMenuProps) {
                 <Users className="w-4 h-4 text-green-400" />
               </div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-                Agents
+                {t("sidebar.agents")}
               </h2>
               <span className="ml-auto text-xs bg-gradient-to-r from-green-500/20 to-blue-500/20 border-white/10 px-2 py-1 rounded">
                 {agentTeams.length}
@@ -101,7 +116,7 @@ export default function MobileMenu(props: MobileMenuProps) {
                   key={team}
                   className="block px-4 py-2 rounded hover:bg-accent/30 transition-all"
                 >
-                  <span className="font-medium">{team}</span>
+                  <span className="font-medium">{getTeamLabel(team)}</span>
                   <ChevronRight className="inline-block w-4 h-4 ml-2 text-muted-foreground" />
                 </Link>
               ))}
@@ -116,15 +131,14 @@ export default function MobileMenu(props: MobileMenuProps) {
               <Music className="w-4 h-4 text-purple-400" />
             </div>
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-              Special
+              {t("sidebar.special")}
             </h2>
           </div>
           <Link
             href="/music-kits"
             className="block px-4 py-2 rounded hover:bg-accent/30 transition-all"
           >
-            <span className="font-medium">Music Kits</span>
-            <Sparkles className="inline-block w-3 h-3 text-purple-400 ml-1" />
+            <span className="font-medium">{t("nav.musicKits")}</span>
             <ChevronRight className="inline-block w-4 h-4 ml-2 text-muted-foreground" />
           </Link>
         </div>

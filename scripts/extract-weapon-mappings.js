@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 
-import { writeFile } from "fs/promises";
+import { writeFile, readFile } from "fs/promises";
 import { join } from "path";
+
+const fs = { readFile };
 
 // =================================================================
 // --- PART 1: DATA PROCESSING ---
@@ -37,6 +39,32 @@ function convertTeamId(teamId) {
 }
 
 /**
+ * Knife name mapping for vanilla (unpainted) knives
+ */
+const VANILLA_KNIFE_NAMES = {
+  500: "★ Bayonet",
+  503: "★ Classic Knife",
+  505: "★ Flip Knife",
+  506: "★ Gut Knife",
+  507: "★ Karambit",
+  508: "★ M9 Bayonet",
+  509: "★ Huntsman Knife",
+  512: "★ Falchion Knife",
+  514: "★ Bowie Knife",
+  515: "★ Butterfly Knife",
+  516: "★ Shadow Daggers",
+  517: "★ Paracord Knife",
+  518: "★ Survival Knife",
+  519: "★ Ursus Knife",
+  520: "★ Navaja Knife",
+  521: "★ Nomad Knife",
+  522: "★ Stiletto Knife",
+  523: "★ Talon Knife",
+  525: "★ Skeleton Knife",
+  526: "★ Kukri Knife",
+};
+
+/**
  * Transforms API skin data to match the app's expected format
  */
 function transformSkinsData(apiSkins) {
@@ -53,6 +81,62 @@ function transformSkinsData(apiSkins) {
       category: skin.category?.name || "Unknown",
       ...(skin.phase && { phase: skin.phase }),
     }));
+}
+
+/**
+ * Adds vanilla (unpainted) knife options to the skin data
+ */
+async function addVanillaKnives(transformedSkins) {
+  console.log("[Phase 1.5] Adding vanilla (unpainted) knife options...");
+
+  // Load base weapons data to get knife images
+  const baseWeaponsPath = join(process.cwd(), "data", "base_weapons.json");
+  let baseWeapons = {};
+  try {
+    const baseWeaponsData = await fs.readFile(baseWeaponsPath, "utf-8");
+    baseWeapons = JSON.parse(baseWeaponsData);
+    console.log("[Phase 1.5] Loaded base weapons data for knife images");
+  } catch (error) {
+    console.warn("[Phase 1.5] Warning: Could not load base_weapons.json, vanilla knives will have no images");
+  }
+
+  const vanillaKnives = [];
+  const existingKnives = new Map();
+
+  // First, collect all existing knife types to get their weapon_name
+  for (const skin of transformedSkins) {
+    const defindex = skin.weapon_defindex;
+    if (VANILLA_KNIFE_NAMES[defindex] && !existingKnives.has(defindex)) {
+      existingKnives.set(defindex, skin.weapon_name);
+    }
+  }
+
+  // Create vanilla knife entries for each knife type found
+  for (const [defindex, weaponName] of existingKnives) {
+    // Get the image from base_weapons.json
+    const baseWeaponData = baseWeapons[weaponName];
+    const image = baseWeaponData?.image || '';
+
+    if (!image) {
+      console.warn(`[Phase 1.5] Warning: No base image found for ${weaponName}`);
+    }
+
+    vanillaKnives.push({
+      weapon_defindex: defindex,
+      weapon_name: weaponName,
+      paint: 0,
+      image: image,
+      paint_name: VANILLA_KNIFE_NAMES[defindex],
+      legacy_model: false,
+      team: 0,
+      category: "Knives",
+    });
+  }
+
+  console.log(`[Phase 1.5] Added ${vanillaKnives.length} vanilla knife options.`);
+
+  // Return the combined array with vanilla knives at the beginning
+  return [...vanillaKnives, ...transformedSkins];
 }
 
 // =================================================================
@@ -207,8 +291,14 @@ async function main() {
       `[Phase 1] Transformed ${transformedSkins.length} skins to app format.`
     );
 
+    // --- PHASE 1.5: Add vanilla (unpainted) knife options ---
+    const skinsWithVanillaKnives = addVanillaKnives(transformedSkins);
+    console.log(
+      `[Phase 1.5] Total skins including vanilla knives: ${skinsWithVanillaKnives.length}`
+    );
+
     // Write the skins.json file as a flat array
-    const finalJsonString = JSON.stringify(transformedSkins, null, 2);
+    const finalJsonString = JSON.stringify(skinsWithVanillaKnives, null, 2);
     const skinsOutputPath = join(process.cwd(), "data", "skins.json");
     await writeFile(skinsOutputPath, finalJsonString);
     console.log(
@@ -218,7 +308,7 @@ async function main() {
     console.log("\n--------------------------------------------------\n");
 
     // --- PHASE 2: Generate mappings from the processed data ---
-    await generateMappings(transformedSkins);
+    await generateMappings(skinsWithVanillaKnives);
 
     console.log("\n🎉 All tasks completed successfully!");
   } catch (error) {

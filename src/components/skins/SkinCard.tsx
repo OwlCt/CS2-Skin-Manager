@@ -5,6 +5,7 @@ import { Skins } from "@/types/skins";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SkinCardProps {
   skin: Skins;
@@ -18,6 +19,7 @@ export default function SkinCard({ skin, userConfig }: SkinCardProps) {
   const pathname = usePathname();
   const [isHighlighted, setIsHighlighted] = useState(false);
   const { getPatternName, loading } = useTranslation();
+  const { t } = useLanguage();
   console.log(userConfig);
 
   useEffect(() => {
@@ -66,9 +68,12 @@ export default function SkinCard({ skin, userConfig }: SkinCardProps) {
               className="text-sm font-medium truncate text-center w-full transition-colors"
               style={{ color: "#cbd5e1" }}
             >
-              {loading
-                ? (skin.paint_name.replace("★ ", "").split(" | ")[1])
-                : (getPatternName(skin.paint, skin.weapon_defindex) || skin.paint_name.replace("★ ", "").split(" | ")[1])
+              {skin.paint === 0
+                ? t("skin.vanilla")
+                : (loading
+                  ? (skin.paint_name.replace("★ ", "").split(" | ")[1] || skin.paint_name.replace("★ ", ""))
+                  : (getPatternName(skin.paint, skin.weapon_defindex) || skin.paint_name.replace("★ ", "").split(" | ")[1] || skin.paint_name.replace("★ ", ""))
+                )
               }{" "}
               {skin.phase ? `(${skin.phase})` : ""}
             </p>

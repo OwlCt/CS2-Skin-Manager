@@ -84,7 +84,7 @@ function getCacheLocation(obj: any): { category?: string; subcategory?: string }
   }
 
   // Music Kits: music-kits/
-  if (obj.id && obj.id.startsWith("music_kit-")) {
+  if (obj.id && typeof obj.id === "string" && obj.id.startsWith("music_kit-")) {
     return {
       category: "music-kits",
       subcategory: undefined, // Flat structure for music kits
@@ -92,7 +92,7 @@ function getCacheLocation(obj: any): { category?: string; subcategory?: string }
   }
 
   // Keychains: keychains/collection_name
-  if (obj.id && obj.id.startsWith("keychain-") && obj.collections && obj.collections.length > 0) {
+  if (obj.id && typeof obj.id === "string" && obj.id.startsWith("keychain-") && obj.collections && obj.collections.length > 0) {
     const collectionName = obj.collections[0].name
       .replace(/Charm Collection/gi, "")
       .trim()
@@ -105,7 +105,7 @@ function getCacheLocation(obj: any): { category?: string; subcategory?: string }
   }
 
   // Stickers: stickers/tournament_name or stickers/type
-  if (obj.id && obj.id.startsWith("sticker-")) {
+  if (obj.id && typeof obj.id === "string" && obj.id.startsWith("sticker-")) {
     let subcategory = "other";
 
     if (obj.tournament && obj.tournament.name) {

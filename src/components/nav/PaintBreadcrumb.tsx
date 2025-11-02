@@ -42,18 +42,25 @@ export default function PaintBreadcrumb({
     const translated = getWeaponName(weaponDefindex);
     if (!translated) return weaponName;
 
-    // For knives (which start with ★), add the star back in Chinese format
-    if (weaponName.startsWith("★ ")) {
-      return `${translated}（★）`;
-    }
-
+    // For vanilla (unpainted) knives, the weaponName is the full name like "★ Bayonet"
+    // The translated version from getWeaponName already includes proper formatting
+    // So we just return it directly
     return translated;
   })();
 
   // Translate skin/pattern name
-  const translatedSkinName = loading || !paintIndex || !weaponDefindex
-    ? skinName
-    : getPatternName(paintIndex, weaponDefindex) || skinName;
+  const translatedSkinName = (() => {
+    // For vanilla (unpainted) knives (paint === 0), show "无涂装" / "Vanilla"
+    if (paintIndex === 0) {
+      return t("skin.vanilla");
+    }
+
+    if (loading || !paintIndex || !weaponDefindex) {
+      return skinName;
+    }
+
+    return getPatternName(paintIndex, weaponDefindex) || skinName;
+  })();
 
   return (
     <AppBreadcrumb>

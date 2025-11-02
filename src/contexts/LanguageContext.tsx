@@ -65,6 +65,8 @@ const uiTranslations = {
     "skin.addStickerSlot": "Add sticker to slot",
     "skin.addKeychain": "Add keychain",
     "skin.keychain": "Keychain",
+    "skin.vanilla": "Vanilla",
+    "skin.vanillaWeaponNotice": "Note: Setting vanilla weapons (except knives) will use the skin actually equipped in your CS2 inventory. To use the vanilla inspect feature, please equip a vanilla weapon yourself.",
 
     // Teams
     "team.terrorists": "Terrorists",
@@ -234,6 +236,8 @@ const uiTranslations = {
     "skin.addStickerSlot": "添加印花到位置",
     "skin.addKeychain": "添加挂件",
     "skin.keychain": "挂件",
+    "skin.vanilla": "无涂装",
+    "skin.vanillaWeaponNotice": "注意：设置无涂装武器（匕首除外）会使用您 CS2 库存中实际装备的皮肤。如需使用无涂装检视功能，请自行装备无涂装武器。",
 
     // Teams
     "team.terrorists": "恐怖分子",
@@ -357,14 +361,27 @@ const uiTranslations = {
 };
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  // Start with English to match SSR, will update after mount
   const [language, setLanguageState] = useState<Language>("en");
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load language preference from localStorage on mount
+  // Load language preference after component mounts
   useEffect(() => {
     const savedLang = localStorage.getItem("language") as Language | null;
     if (savedLang && (savedLang === "en" || savedLang === "zh-CN")) {
-      setLanguageState(savedLang);
+      // Only update state if language actually changed to avoid unnecessary re-render
+      if (savedLang !== "en") {
+        setLanguageState(savedLang);
+      }
+    } else {
+      // Auto-detect browser language if no saved preference
+      const browserLang = navigator.language.toLowerCase();
+      if (browserLang.startsWith("zh")) {
+        setLanguageState("zh-CN");
+      }
     }
+    // Use setTimeout to ensure smooth rendering
+    setTimeout(() => setIsInitialized(true), 0);
   }, []);
 
   // Save language preference to localStorage when it changes

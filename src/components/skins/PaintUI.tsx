@@ -4,7 +4,7 @@ import { Skins } from "@/types/skins";
 import { Sticker } from "@/types/sticker";
 import { Keychain } from "@/types/keychain";
 import { motion } from "framer-motion";
-import { Settings, Star, Tag, Target, Zap } from "lucide-react";
+import { Settings, Star, Tag, Target, Zap, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 import CTLogo from "@/assets/ct_logo.svg";
 import TLogo from "@/assets/t_logo.svg";
@@ -48,7 +48,7 @@ export default function PaintUI({
 }) {
   // Translation hooks
   const { getSkinName, getWearName, getStickerName, getKeychainName, loading: translationLoading } = useTranslation();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Determine weapon type
   const weaponDefindex = skin.weapon_defindex;
@@ -330,9 +330,14 @@ export default function PaintUI({
               <div className="absolute inset-0 bg-primary/20 rounded-full blur opacity-40" />
               <div className="relative bg-muted/40 backdrop-blur-md border border-border rounded-full px-6 py-3">
                 <h4 className="text-foreground text-xl font-bold">
-                  {translationLoading
-                    ? skin.paint_name
-                    : (getSkinName(skin.paint, skin.weapon_defindex) || skin.paint_name)
+                  {skin.paint === 0
+                    ? (language === "zh-CN"
+                        ? `${getSkinName(skin.paint, skin.weapon_defindex) || skin.paint_name}`
+                        : skin.paint_name)
+                    : (translationLoading
+                      ? skin.paint_name
+                      : (getSkinName(skin.paint, skin.weapon_defindex) || skin.paint_name)
+                    )
                   } {skin.phase ? `(${skin.phase})` : ""}
                 </h4>
               </div>
@@ -444,6 +449,20 @@ export default function PaintUI({
                   {t("skin.customize")}
                 </h2>
               </motion.div>
+              {/* Vanilla weapon notice - Only for non-knife vanilla weapons */}
+              {skin.paint === 0 && !isKnifeWeapon && (
+                <motion.div
+                  className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-start gap-3"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-foreground/80">
+                    {t("skin.vanillaWeaponNotice")}
+                  </p>
+                </motion.div>
+              )}
               <div className="space-y-6">
                 {/* Wear */}
                 <motion.div variants={itemVariants}>

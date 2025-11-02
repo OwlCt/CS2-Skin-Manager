@@ -432,21 +432,6 @@ export default function Sidebar({ categories, agentTeams }: SidebarProps) {
         hoverGradient={config.hoverGradient}
         activeColor={config.activeColor}
         hoverColor={config.hoverColor}
-        icon={
-          <motion.div
-            animate={{
-              rotate: [0, 360],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            <Sparkles className="w-3 h-3 text-purple-400 ml-1" aria-hidden="true" />
-          </motion.div>
-        }
       />
     );
   }, [hoveredItem, setHoveredItem, isMusicKitsActive, t]);

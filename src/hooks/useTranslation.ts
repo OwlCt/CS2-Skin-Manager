@@ -46,6 +46,22 @@ export function useTranslation() {
   const getSkinName = (paintIndex: number, weaponDefindex: number): string => {
     if (!translations?.skins) return "";
 
+    // Handle vanilla (unpainted) knives
+    if (paintIndex === 0) {
+      // Get weapon name and add vanilla indicator
+      const weaponName = getWeaponName(weaponDefindex);
+      if (weaponName) {
+        // In Chinese, format as "刺刀（★）"
+        // In English, format as "★ Bayonet"
+        if (language === "zh-CN") {
+          return `${weaponName}`;
+        } else {
+          return weaponName;
+        }
+      }
+      return "";
+    }
+
     const skin = translations.skins.find(
       (s: any) => s.paint_index === paintIndex.toString() && s.weapon.weapon_id === weaponDefindex
     );
@@ -58,6 +74,12 @@ export function useTranslation() {
    */
   const getPatternName = (paintIndex: number, weaponDefindex: number): string => {
     if (!translations?.skins) return "";
+
+    // Handle vanilla (unpainted) knives - return empty string
+    // The UI will handle displaying "Vanilla" / "无涂装" label
+    if (paintIndex === 0) {
+      return "";
+    }
 
     const skin = translations.skins.find(
       (s: any) => s.paint_index === paintIndex.toString() && s.weapon.weapon_id === weaponDefindex
@@ -76,7 +98,26 @@ export function useTranslation() {
       (s: any) => s.weapon.weapon_id === weaponDefindex
     );
 
-    return skin?.weapon?.name || "";
+    const weaponName = skin?.weapon?.name || "";
+
+    // For knives, add the star symbol in the appropriate format
+    // But only if it doesn't already have the star
+    if (weaponName && [500, 503, 505, 506, 507, 508, 509, 512, 514, 515, 516, 517, 518, 519, 520, 521, 522, 523, 525, 526].includes(weaponDefindex)) {
+      // Check if star symbol is already present
+      if (weaponName.includes("★") || weaponName.includes("（★）")) {
+        return weaponName;
+      }
+
+      if (language === "zh-CN") {
+        // Chinese format: "刺刀（★）"
+        return `${weaponName}（★）`;
+      } else {
+        // English format: "★ Bayonet"
+        return `★ ${weaponName}`;
+      }
+    }
+
+    return weaponName;
   };
 
   /**
