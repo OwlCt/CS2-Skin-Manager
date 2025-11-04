@@ -48,5 +48,4 @@ next-env.d.ts
 
 # local AI files
 AGENTS.md
-CLAUDE.md
 .claude/
