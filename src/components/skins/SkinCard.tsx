@@ -3,7 +3,7 @@
 import BaseCard from "@/components/ui/BaseCard";
 import { Skins } from "@/types/skins";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -14,7 +14,7 @@ interface SkinCardProps {
   };
 }
 
-export default function SkinCard({ skin, userConfig }: SkinCardProps) {
+function SkinCard({ skin, userConfig }: SkinCardProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isHighlighted, setIsHighlighted] = useState(false);
@@ -82,3 +82,7 @@ export default function SkinCard({ skin, userConfig }: SkinCardProps) {
     </div>
   );
 }
+
+// Export memoized component for performance optimization
+// This prevents unnecessary re-renders when props haven't changed
+export default memo(SkinCard);
