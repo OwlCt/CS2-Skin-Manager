@@ -214,9 +214,10 @@ src/app/
 - `DATABASE_URL` - MySQL connection string
 - `SESSION_PASSWORD` - 32-character random string for session encryption
 - `STEAM_API_KEY` - From https://steamcommunity.com/dev/apikey
-- `NEXT_PUBLIC_URL` - Full app URL for Steam callback
+- `NEXT_PUBLIC_URL` - Full app URL for Steam callback (must match PORT if changed)
 
 **Optional**:
+- `PORT` - Application port number (default: 3000). **Important**: Update `NEXT_PUBLIC_URL` if changed
 - `ENABLE_IMAGE_CACHE` - Toggle image caching (default: "true")
 - `NEXT_PUBLIC_SERVER_NAME` - Display name for CS2 server
 - `NEXT_PUBLIC_SERVER_IP` / `NEXT_PUBLIC_SERVER_PORT` - For "Join Server" button
