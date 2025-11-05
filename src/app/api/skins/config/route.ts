@@ -1,10 +1,8 @@
 import { getSession } from "@/lib/session";
 import { getKnifeName, isGlove, isKnife } from "@/lib/weapons";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-
-const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   try {

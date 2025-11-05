@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { z } from "zod";
-
-const prisma = new PrismaClient();
 
 // Zod schema for music kit config validation
 const musicKitConfigSchema = z.object({
