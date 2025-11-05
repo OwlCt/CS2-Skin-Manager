@@ -72,11 +72,11 @@ Six MySQL tables track per-user, per-team configurations:
 - Provides `t(key)` function for UI text translation
 - Persisted to localStorage, auto-detects browser language
 
-**2. Game Data Translations** (`data/translations/`):
-- Large JSON files (~6MB each) from [CSGO-API](https://github.com/ByMykel/CSGO-API)
-- Contains all skin names, agent names, music kit names
-- Loaded server-side via `src/lib/translations.ts` with in-memory cache
-- Mapped via `src/lib/translation-mapping.ts` using paint_index, weapon_defindex, or IDs
+**2. Game Data Translations** (`public/data/translations/`):
+- Large JSON files (~23MB each) from [CSGO-API](https://github.com/ByMykel/CSGO-API)
+- Contains all skin names, agent names, music kit names, stickers, keychains
+- Loaded client-side via `src/hooks/useTranslation.ts` with in-memory cache
+- Fetched dynamically on first use with caching to avoid repeated requests
 
 **Important**: UI text uses LanguageContext, game items use translation JSON files. These are separate systems.
 

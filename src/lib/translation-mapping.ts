@@ -85,3 +85,54 @@ export function createMusicKitTranslationMap(
 
   return map;
 }
+
+/**
+ * Create a mapping between local keychain data and API translation data
+ */
+export function createKeychainTranslationMap(
+  localKeychains: any[],
+  translatedKeychains: any[]
+): Map<string, any> {
+  const map = new Map<string, any>();
+
+  for (const localKeychain of localKeychains) {
+    // Keychains match by ID (e.g., "keychain-1", "keychain-2")
+    const translatedKeychain = translatedKeychains.find(
+      (k: any) => k.id === localKeychain.id
+    );
+
+    if (translatedKeychain) {
+      // Store full keychain data for rarity and collection translations
+      map.set(localKeychain.id, {
+        name: translatedKeychain.name,
+        rarity: translatedKeychain.rarity?.name || localKeychain.rarity?.name,
+        collections: translatedKeychain.collections || localKeychain.collections,
+      });
+    }
+  }
+
+  return map;
+}
+
+/**
+ * Create a mapping between local sticker data and API translation data
+ */
+export function createStickerTranslationMap(
+  localStickers: any[],
+  translatedStickers: any[]
+): Map<string, string> {
+  const map = new Map<string, string>();
+
+  for (const localSticker of localStickers) {
+    // Stickers match by ID (e.g., "sticker-1", "sticker-2")
+    const translatedSticker = translatedStickers.find(
+      (s: any) => s.id === localSticker.id
+    );
+
+    if (translatedSticker) {
+      map.set(localSticker.id, translatedSticker.name);
+    }
+  }
+
+  return map;
+}
