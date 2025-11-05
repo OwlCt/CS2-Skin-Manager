@@ -167,10 +167,59 @@ CS2 has faction-exclusive weapons that can only be used by one team:
 - `POST /api/auth/logout` - Clear session
 
 **Common Pattern**: All config routes:
-1. Check session with `getSession()`
-2. Parse request body with Zod schema
-3. Upsert to database via Prisma
-4. Return success response
+1. Validate request size (prevents large payload attacks)
+2. Check session with `getSession()`
+3. Apply rate limiting (prevents abuse)
+4. Parse request body with Zod schema
+5. Upsert to database via Prisma
+6. Return success response with rate limit headers
+
+### API Security
+
+**Location**: `src/lib/rate-limit.ts`, `src/lib/api-security.ts`
+
+**Rate Limiting**: In-memory sliding window rate limiter to prevent API abuse. Three pre-configured limiters:
+
+1. **authRateLimiter** - Strict protection for authentication endpoints
+   - Limit: 5 requests per 15 minutes per IP
+   - Used by: `/api/auth/steam`, `/api/auth/callback/steam`
+   - Prevents: Brute force attacks, credential stuffing
+
+2. **writeRateLimiter** - Moderate protection for write operations
+   - Limit: 30 requests per minute per user (Steam ID)
+   - Used by: `/api/skins/config`, `/api/agents/config`, `/api/music-kits/config`
+   - Prevents: Database spam, rapid-fire updates
+
+3. **readRateLimiter** - Lenient protection for read operations
+   - Limit: 100 requests per minute per IP
+   - Used by: `/api/skins/search`, `/api/image-proxy`
+   - Prevents: Excessive queries, proxy abuse
+
+**Request Size Validation**: `validateRequestSize()` checks Content-Length header and actual body size:
+- Config routes: 50-100KB max
+- Prevents: Large payload DoS attacks
+- Returns 413 error if exceeded
+
+**Security Utilities** (`src/lib/api-security.ts`):
+- `rateLimitExceededResponse()` - Standard 429 response with Retry-After header
+- `addRateLimitHeaders()` - Adds X-RateLimit-Remaining and X-RateLimit-Reset headers
+- `unauthorizedResponse()` - Standard 401 response
+- `badRequestResponse()` - Standard 400 response with details
+- `serverErrorResponse()` - Standard 500 response (includes error details in development only)
+
+**Rate Limiter Details**:
+- Uses sliding window algorithm for accurate rate limiting
+- Automatic cleanup every 10-30 minutes to prevent memory leaks
+- Identifies clients by IP address (with proxy header support) or Steam ID
+- Store size tracked for debugging: `rateLimiter.getStoreSize()`
+
+**Important**: Rate limiters use in-memory storage and are suitable for single-server deployments. For multi-server deployments, consider using `@upstash/ratelimit` with Redis.
+
+**Client Identification**: `getClientIdentifier()` extracts real IP from:
+- `cf-connecting-ip` (Cloudflare)
+- `x-real-ip` (Nginx)
+- `x-forwarded-for` (Standard proxy header)
+- Falls back to "unknown" if no IP found
 
 ### App Router Structure
 

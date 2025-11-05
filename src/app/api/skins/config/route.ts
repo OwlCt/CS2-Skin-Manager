@@ -3,19 +3,42 @@ import { getKnifeName, isGlove, isKnife } from "@/lib/weapons";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import {
+  validateRequestSize,
+  rateLimitExceededResponse,
+  addRateLimitHeaders,
+  unauthorizedResponse,
+  badRequestResponse,
+  serverErrorResponse,
+} from "@/lib/api-security";
+import { writeRateLimiter } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    // 1. Validate request size (max 100KB)
+    const sizeError = await validateRequestSize(request, 100 * 1024);
+    if (sizeError) {
+      return sizeError;
+    }
+
+    // 2. Get session and check authentication
     const session = await getSession();
     const steamid = session?.steamId;
 
     if (!steamid) {
-      return NextResponse.json(
-        { error: "Not authenticated. Please log in." },
-        { status: 401 }
+      return unauthorizedResponse("Not authenticated. Please log in.");
+    }
+
+    // 3. Rate limiting (30 requests per minute per user)
+    const rateLimitResult = writeRateLimiter.check(steamid);
+    if (rateLimitResult.limited) {
+      return rateLimitExceededResponse(
+        rateLimitResult.remaining,
+        rateLimitResult.resetAt
       );
     }
 
+    // 4. Parse and validate request body
     const body = await request.json();
 
     const configSchema = z.object({
@@ -33,12 +56,9 @@ export async function POST(request: NextRequest) {
 
     const parseResult = configSchema.safeParse(body);
     if (!parseResult.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid request body",
-          details: parseResult.error.issues,
-        },
-        { status: 400 }
+      return badRequestResponse(
+        "Invalid request body",
+        parseResult.error.issues
       );
     }
     const {
@@ -144,19 +164,23 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(
+    // Return success response with rate limit headers
+    const response = NextResponse.json(
       {
         message: "Skin configuration saved successfully",
         affectedTeams: teams,
       },
       { status: 200 }
     );
+
+    return addRateLimitHeaders(
+      response,
+      rateLimitResult.remaining,
+      rateLimitResult.resetAt
+    );
   } catch (error) {
     console.error("Error saving skin configuration:", error);
-    return NextResponse.json(
-      { error: "Failed to save skin configuration" },
-      { status: 500 }
-    );
+    return serverErrorResponse("Failed to save skin configuration", error);
   }
 }
 
@@ -166,10 +190,7 @@ export async function GET() {
     const steamid = session?.steamId;
 
     if (!steamid) {
-      return NextResponse.json(
-        { error: "Not authenticated. Please log in." },
-        { status: 401 }
-      );
+      return unauthorizedResponse("Not authenticated. Please log in.");
     }
 
     const [skins, knives, gloves] = await Promise.all([
@@ -184,9 +205,6 @@ export async function GET() {
     return NextResponse.json({ skins, knives, gloves }, { status: 200 });
   } catch (error) {
     console.error("Error fetching skin configurations:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch skin configurations" },
-      { status: 500 }
-    );
+    return serverErrorResponse("Failed to fetch skin configurations", error);
   }
 }

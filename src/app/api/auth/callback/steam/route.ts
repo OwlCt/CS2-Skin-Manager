@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { RelyingParty } from "openid";
 import { getSession } from "@/lib/session";
+import { authRateLimiter, getClientIdentifier } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
   const session = await getSession();
 
   try {
+    // Rate limiting for callback attempts (5 per 15 minutes per IP)
+    const clientId = getClientIdentifier(req);
+    const rateLimitResult = authRateLimiter.check(clientId);
+
+    if (rateLimitResult.limited) {
+      return NextResponse.redirect(
+        new URL("/?error=rate_limit_exceeded", process.env.NEXT_PUBLIC_URL)
+      );
+    }
     const relyingParty = new RelyingParty(
       `${process.env.NEXT_PUBLIC_URL}/api/auth/callback/steam`,
       process.env.NEXT_PUBLIC_URL!,

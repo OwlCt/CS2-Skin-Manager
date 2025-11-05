@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { z } from "zod";
+import {
+  validateRequestSize,
+  rateLimitExceededResponse,
+  addRateLimitHeaders,
+  unauthorizedResponse,
+  badRequestResponse,
+  serverErrorResponse,
+} from "@/lib/api-security";
+import { writeRateLimiter } from "@/lib/rate-limit";
 
 // Zod schema for music kit config validation
 const musicKitConfigSchema = z.object({
@@ -19,29 +28,36 @@ const musicKitConfigSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // 1. Validate request size (max 50KB)
+    const sizeError = await validateRequestSize(request, 50 * 1024);
+    if (sizeError) {
+      return sizeError;
+    }
+
+    // 2. Get session and check authentication
     const session = await getSession();
     const steamid = session?.steamId;
 
     if (!steamid) {
-      return NextResponse.json(
-        { error: "Not authenticated. Please log in." },
-        { status: 401 }
+      return unauthorizedResponse("Not authenticated. Please log in.");
+    }
+
+    // 3. Rate limiting (30 requests per minute per user)
+    const rateLimitResult = writeRateLimiter.check(steamid);
+    if (rateLimitResult.limited) {
+      return rateLimitExceededResponse(
+        rateLimitResult.remaining,
+        rateLimitResult.resetAt
       );
     }
 
+    // 4. Parse and validate request body
     const body = await request.json();
 
-    // Validate request body with Zod
     const validation = musicKitConfigSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid request data",
-          details: validation.error.issues,
-        },
-        { status: 400 }
-      );
+      return badRequestResponse("Invalid request data", validation.error.issues);
     }
 
     const { team, defIndex } = validation.data;
@@ -80,11 +96,18 @@ export async function POST(request: NextRequest) {
         }),
       ]);
 
-      return NextResponse.json({
+      // Return success response with rate limit headers (both teams)
+      const response = NextResponse.json({
         success: true,
         message: "Music kit configuration saved successfully for both teams",
         data: results,
       });
+
+      return addRateLimitHeaders(
+        response,
+        rateLimitResult.remaining,
+        rateLimitResult.resetAt
+      );
     }
 
     const result = await prisma.wp_player_music.upsert({
@@ -104,17 +127,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
+    // Return success response with rate limit headers
+    const response = NextResponse.json({
       success: true,
       message: "Music kit configuration saved successfully",
       data: result,
     });
+
+    return addRateLimitHeaders(
+      response,
+      rateLimitResult.remaining,
+      rateLimitResult.resetAt
+    );
   } catch (error) {
     console.error("Error saving music kit configuration:", error);
-    return NextResponse.json(
-      { error: "Failed to save music kit configuration" },
-      { status: 500 }
-    );
+    return serverErrorResponse("Failed to save music kit configuration", error);
   }
 }
 
@@ -124,10 +151,7 @@ export async function GET() {
     const steamid = session?.steamId;
 
     if (!steamid) {
-      return NextResponse.json(
-        { error: "Not authenticated. Please log in." },
-        { status: 401 }
-      );
+      return unauthorizedResponse("Not authenticated. Please log in.");
     }
 
     const musicConfigs = await prisma.wp_player_music.findMany({
@@ -142,9 +166,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching music kit configuration:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch music kit configuration" },
-      { status: 500 }
-    );
+    return serverErrorResponse("Failed to fetch music kit configuration", error);
   }
 }

@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { z } from "zod";
+import {
+  validateRequestSize,
+  rateLimitExceededResponse,
+  addRateLimitHeaders,
+  unauthorizedResponse,
+  badRequestResponse,
+  serverErrorResponse,
+} from "@/lib/api-security";
+import { writeRateLimiter } from "@/lib/rate-limit";
 
 // Zod schema for agent config validation
 const agentConfigSchema = z.object({
@@ -13,30 +22,36 @@ const agentConfigSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // Get steamId from session
+    // 1. Validate request size (max 50KB)
+    const sizeError = await validateRequestSize(request, 50 * 1024);
+    if (sizeError) {
+      return sizeError;
+    }
+
+    // 2. Get steamId from session
     const session = await getSession();
     const steamid = session?.steamId;
 
     if (!steamid) {
-      return NextResponse.json(
-        { error: "Not authenticated. Please log in." },
-        { status: 401 }
+      return unauthorizedResponse("Not authenticated. Please log in.");
+    }
+
+    // 3. Rate limiting (30 requests per minute per user)
+    const rateLimitResult = writeRateLimiter.check(steamid);
+    if (rateLimitResult.limited) {
+      return rateLimitExceededResponse(
+        rateLimitResult.remaining,
+        rateLimitResult.resetAt
       );
     }
 
+    // 4. Parse and validate request body
     const body = await request.json();
 
-    // Validate request body with Zod
     const validation = agentConfigSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid request data",
-          details: validation.error.issues,
-        },
-        { status: 400 }
-      );
+      return badRequestResponse("Invalid request data", validation.error.issues);
     }
 
     const { team, modelPlayer } = validation.data;
@@ -61,17 +76,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
+    // Return success response with rate limit headers
+    const response = NextResponse.json({
       success: true,
       message: "Agent configuration saved successfully",
       data: result,
     });
+
+    return addRateLimitHeaders(
+      response,
+      rateLimitResult.remaining,
+      rateLimitResult.resetAt
+    );
   } catch (error) {
     console.error("Error saving agent configuration:", error);
-    return NextResponse.json(
-      { error: "Failed to save agent configuration" },
-      { status: 500 }
-    );
+    return serverErrorResponse("Failed to save agent configuration", error);
   }
 }
 
@@ -81,10 +100,7 @@ export async function GET() {
     const steamid = session?.steamId;
 
     if (!steamid) {
-      return NextResponse.json(
-        { error: "Not authenticated. Please log in." },
-        { status: 401 }
-      );
+      return unauthorizedResponse("Not authenticated. Please log in.");
     }
 
     // Get the current agent configuration
@@ -100,9 +116,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching agent configuration:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch agent configuration" },
-      { status: 500 }
-    );
+    return serverErrorResponse("Failed to fetch agent configuration", error);
   }
 }

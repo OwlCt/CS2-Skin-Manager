@@ -1,9 +1,24 @@
 import { getSkinsData } from "@/lib/data";
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
+import {
+  rateLimitExceededResponse,
+  serverErrorResponse,
+} from "@/lib/api-security";
+import { readRateLimiter, getClientIdentifier } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting for search (100 requests per minute per IP)
+    const clientId = getClientIdentifier(request);
+    const rateLimitResult = readRateLimiter.check(clientId);
+
+    if (rateLimitResult.limited) {
+      return rateLimitExceededResponse(
+        rateLimitResult.remaining,
+        rateLimitResult.resetAt
+      );
+    }
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
 
@@ -33,9 +48,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(filteredSkins);
   } catch (error) {
     console.error("Failed to fetch skins for search:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch skins for search" },
-      { status: 500 }
-    );
+    return serverErrorResponse("Failed to fetch skins for search", error);
   }
 }

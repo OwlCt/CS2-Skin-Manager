@@ -1,8 +1,26 @@
 import { RelyingParty } from "openid";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  rateLimitExceededResponse,
+  serverErrorResponse,
+} from "@/lib/api-security";
+import { authRateLimiter, getClientIdentifier } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Rate limiting for authentication attempts (5 per 15 minutes per IP)
+    const clientId = getClientIdentifier(request);
+    const rateLimitResult = authRateLimiter.check(clientId);
+
+    if (rateLimitResult.limited) {
+      // For auth endpoints, redirect to home with error instead of JSON response
+      return NextResponse.redirect(
+        new URL(
+          "/?error=rate_limit_exceeded",
+          process.env.NEXT_PUBLIC_URL
+        )
+      );
+    }
     const relyingParty = new RelyingParty(
       `${process.env.NEXT_PUBLIC_URL}/api/auth/callback/steam`, // Callback URL
       process.env.NEXT_PUBLIC_URL!, // Realm

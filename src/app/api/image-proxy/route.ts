@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import {
+  rateLimitExceededResponse,
+  badRequestResponse,
+  serverErrorResponse,
+} from "@/lib/api-security";
+import { readRateLimiter, getClientIdentifier } from "@/lib/rate-limit";
 
 /**
  * Image proxy API route
@@ -10,14 +16,21 @@ import crypto from "node:crypto";
  */
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting for image proxy (100 requests per minute per IP)
+    const clientId = getClientIdentifier(request);
+    const rateLimitResult = readRateLimiter.check(clientId);
+
+    if (rateLimitResult.limited) {
+      return rateLimitExceededResponse(
+        rateLimitResult.remaining,
+        rateLimitResult.resetAt
+      );
+    }
     const searchParams = request.nextUrl.searchParams;
     const imageUrl = searchParams.get("url");
 
     if (!imageUrl) {
-      return NextResponse.json(
-        { error: "Missing 'url' parameter" },
-        { status: 400 }
-      );
+      return badRequestResponse("Missing 'url' parameter");
     }
 
     // Validate URL is from Steam CDN
@@ -32,10 +45,7 @@ export async function GET(request: NextRequest) {
     try {
       url = new URL(imageUrl);
     } catch {
-      return NextResponse.json(
-        { error: "Invalid URL format" },
-        { status: 400 }
-      );
+      return badRequestResponse("Invalid URL format");
     }
 
     if (!allowedHosts.includes(url.hostname)) {
@@ -130,10 +140,7 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error("Image proxy error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return serverErrorResponse("Internal server error", error);
   }
 }
 
