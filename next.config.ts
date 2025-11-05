@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Enable gzip compression for all responses (reduces translation file size by ~80%)
+  compress: true,
   images: {
     remotePatterns: [
       {

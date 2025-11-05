@@ -8,6 +8,7 @@ import { Skins, UserSkinConfig } from "@/types/skins";
 import { Search } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import SkeletonSkinGrid from "@/components/loading/SkeletonSkinGrid";
 
 interface SkinGridProps {
   skins: Skins[];
@@ -19,6 +20,11 @@ export default function SkinGrid({ skins, userConfigs }: SkinGridProps) {
   const { getSkinName, getPatternName, loading: translationLoading } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearchQuery, setActiveSearchQuery] = useState("");
+
+  // Show skeleton while translations are loading
+  if (translationLoading) {
+    return <SkeletonSkinGrid />;
+  }
 
   // Manual search function
   const handleSearch = () => {
