@@ -1,10 +1,101 @@
 "use client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { KNIFE_DEFINDEXES } from "@/lib/weapons";
 
 // Translation cache to avoid refetching
 const translationCache: Record<string, any> = {};
+
+// Index cache to avoid rebuilding indexes
+interface TranslationIndexes {
+  skinsByPaintAndWeapon: Map<string, any>;
+  skinsByWeaponId: Map<number, any>;
+  skinsByWeaponKey: Map<string, any>;
+  weaponsByCategoryId: Map<string, any>;
+  weaponsByRarityId: Map<string, any>;
+  agentsById: Map<string, any>;
+  musicKitsById: Map<number, any>;
+  stickersById: Map<string, any>;
+  keychainsById: Map<string, any>;
+}
+
+const indexCache: Record<string, TranslationIndexes> = {};
+
+/**
+ * Build optimized indexes for fast lookups
+ */
+function buildIndexes(translations: any): TranslationIndexes {
+  const indexes: TranslationIndexes = {
+    skinsByPaintAndWeapon: new Map(),
+    skinsByWeaponId: new Map(),
+    skinsByWeaponKey: new Map(),
+    weaponsByCategoryId: new Map(),
+    weaponsByRarityId: new Map(),
+    agentsById: new Map(),
+    musicKitsById: new Map(),
+    stickersById: new Map(),
+    keychainsById: new Map(),
+  };
+
+  // Index skins by paint_index + weapon_id (most common lookup)
+  if (translations.skins) {
+    for (const skin of translations.skins) {
+      const key = `${skin.paint_index}-${skin.weapon.weapon_id}`;
+      indexes.skinsByPaintAndWeapon.set(key, skin);
+
+      // Index by weapon_id for getWeaponName()
+      if (!indexes.skinsByWeaponId.has(skin.weapon.weapon_id)) {
+        indexes.skinsByWeaponId.set(skin.weapon.weapon_id, skin);
+      }
+
+      // Index by weapon.id for getWeaponNameByKey()
+      if (skin.weapon?.id && !indexes.skinsByWeaponKey.has(skin.weapon.id)) {
+        indexes.skinsByWeaponKey.set(skin.weapon.id, skin);
+      }
+
+      // Index by category.id
+      if (skin.category?.id && !indexes.weaponsByCategoryId.has(skin.category.id)) {
+        indexes.weaponsByCategoryId.set(skin.category.id, skin);
+      }
+
+      // Index by rarity.id
+      if (skin.rarity?.id && !indexes.weaponsByRarityId.has(skin.rarity.id)) {
+        indexes.weaponsByRarityId.set(skin.rarity.id, skin);
+      }
+    }
+  }
+
+  // Index agents by ID
+  if (translations.agents) {
+    for (const agent of translations.agents) {
+      indexes.agentsById.set(agent.id, agent);
+    }
+  }
+
+  // Index music kits by ID
+  if (translations.music_kits) {
+    for (const kit of translations.music_kits) {
+      indexes.musicKitsById.set(kit.id, kit);
+    }
+  }
+
+  // Index stickers by ID
+  if (translations.stickers) {
+    for (const sticker of translations.stickers) {
+      indexes.stickersById.set(sticker.id, sticker);
+    }
+  }
+
+  // Index keychains by ID
+  if (translations.keychains) {
+    for (const keychain of translations.keychains) {
+      indexes.keychainsById.set(keychain.id, keychain);
+    }
+  }
+
+  return indexes;
+}
 
 /**
  * Hook to get translated game data based on current language
@@ -40,32 +131,38 @@ export function useTranslation() {
     loadTranslations();
   }, [language]);
 
+  // Build indexes when translations change
+  const indexes = useMemo(() => {
+    if (!translations) return null;
+
+    // Check index cache first
+    if (indexCache[language]) {
+      return indexCache[language];
+    }
+
+    // Build and cache indexes
+    const newIndexes = buildIndexes(translations);
+    indexCache[language] = newIndexes;
+    return newIndexes;
+  }, [translations, language]);
+
   /**
    * Get translated skin name by paint_index and weapon_defindex
    */
   const getSkinName = (paintIndex: number, weaponDefindex: number): string => {
-    if (!translations?.skins) return "";
+    if (!indexes) return "";
 
     // Handle vanilla (unpainted) knives
     if (paintIndex === 0) {
-      // Get weapon name and add vanilla indicator
       const weaponName = getWeaponName(weaponDefindex);
       if (weaponName) {
-        // In Chinese, format as "刺刀（★）"
-        // In English, format as "★ Bayonet"
-        if (language === "zh-CN") {
-          return `${weaponName}`;
-        } else {
-          return weaponName;
-        }
+        return weaponName;
       }
       return "";
     }
 
-    const skin = translations.skins.find(
-      (s: any) => s.paint_index === paintIndex.toString() && s.weapon.weapon_id === weaponDefindex
-    );
-
+    const key = `${paintIndex}-${weaponDefindex}`;
+    const skin = indexes.skinsByPaintAndWeapon.get(key);
     return skin?.name || "";
   };
 
@@ -73,18 +170,15 @@ export function useTranslation() {
    * Get translated pattern/paint name only (without weapon name)
    */
   const getPatternName = (paintIndex: number, weaponDefindex: number): string => {
-    if (!translations?.skins) return "";
+    if (!indexes) return "";
 
     // Handle vanilla (unpainted) knives - return empty string
-    // The UI will handle displaying "Vanilla" / "无涂装" label
     if (paintIndex === 0) {
       return "";
     }
 
-    const skin = translations.skins.find(
-      (s: any) => s.paint_index === paintIndex.toString() && s.weapon.weapon_id === weaponDefindex
-    );
-
+    const key = `${paintIndex}-${weaponDefindex}`;
+    const skin = indexes.skinsByPaintAndWeapon.get(key);
     return skin?.pattern?.name || "";
   };
 
@@ -92,17 +186,13 @@ export function useTranslation() {
    * Get translated weapon name by weapon_id (defindex)
    */
   const getWeaponName = (weaponDefindex: number): string => {
-    if (!translations?.skins) return "";
+    if (!indexes) return "";
 
-    const skin = translations.skins.find(
-      (s: any) => s.weapon.weapon_id === weaponDefindex
-    );
-
+    const skin = indexes.skinsByWeaponId.get(weaponDefindex);
     const weaponName = skin?.weapon?.name || "";
 
     // For knives, add the star symbol in the appropriate format
-    // But only if it doesn't already have the star
-    if (weaponName && [500, 503, 505, 506, 507, 508, 509, 512, 514, 515, 516, 517, 518, 519, 520, 521, 522, 523, 525, 526].includes(weaponDefindex)) {
+    if (weaponName && KNIFE_DEFINDEXES.includes(weaponDefindex)) {
       // Check if star symbol is already present
       if (weaponName.includes("★") || weaponName.includes("（★）")) {
         return weaponName;
@@ -122,56 +212,36 @@ export function useTranslation() {
 
   /**
    * Get translated weapon name by weapon key (e.g., "weapon_knife_butterfly")
-   * This is useful for weapon lists where you have the weapon key from base_weapons.json
    */
   const getWeaponNameByKey = (weaponKey: string): string => {
-    if (!translations?.skins) return "";
+    if (!indexes) return "";
 
-    const skin = translations.skins.find(
-      (s: any) => s.weapon?.id === weaponKey
-    );
-
+    const skin = indexes.skinsByWeaponKey.get(weaponKey);
     return skin?.weapon?.name || "";
   };
 
   /**
    * Get translated weapon name by English weapon name
    * Handles knife names with stars like "★ Bayonet"
-   * This is useful when you have the English name from base_weapons.json
    */
   const getWeaponNameByEnglish = (englishName: string): string => {
-    if (!translations?.skins) return englishName;
+    if (!indexes) return englishName;
 
     // Handle knife names with stars (e.g., "★ Bayonet")
-    // The translation API has the format "刺刀（★）" instead of "★ 刺刀"
     if (englishName.startsWith("★ ")) {
       const knifeNameWithoutStar = englishName.substring(2).trim().toLowerCase();
-
-      // Create weapon_id format: "★ Butterfly Knife" -> "weapon_knife_butterfly_knife"
-      // Note: The API format is "weapon_knife_{type}", not "weapon_{type}"
       const weaponId = `weapon_knife_${knifeNameWithoutStar.replace(/\s+/g, '_')}`;
 
-      // Try to find the knife in translations by weapon.id
-      const knifeSkin = translations.skins.find((s: any) => {
-        return s.weapon?.id === weaponId;
-      });
-
+      const knifeSkin = indexes.skinsByWeaponKey.get(weaponId);
       if (knifeSkin?.weapon?.name) {
-        // Return in the format "刺刀（★）"
         return `${knifeSkin.weapon.name}（★）`;
       }
     }
 
-    // Try to find a matching weapon by comparing English names
-    // The skins array contains weapons with their English names in the weapon.name field in English translation
-    // For non-English languages, we need to match by weapon structure
-
-    // Create a normalized version of the input name for comparison
     const normalizedInput = englishName.toLowerCase().trim();
 
     // For gloves, try to match by the base type
     if (normalizedInput.includes("glove") || normalizedInput.includes("wrap")) {
-      // Try to find by matching patterns in weapon names
       const gloveTypes: Record<string, number> = {
         "hand wraps": 5032,
         "driver gloves": 5031,
@@ -183,7 +253,6 @@ export function useTranslation() {
         "broken fang gloves": 4725,
       };
 
-      // Remove spaces from input for matching
       const normalizedInputNoSpace = normalizedInput.replace(/\s+/g, "");
 
       for (const [type, defindex] of Object.entries(gloveTypes)) {
@@ -257,42 +326,40 @@ export function useTranslation() {
       return getWeaponName(matchedDefindex);
     }
 
-    // If no match found, return the original name
     return englishName;
   };
 
   /**
    * Get translated agent name by agent model path or name
-   * Tries to match by comparing agent names (case-insensitive partial match)
    */
   const getAgentName = (agentNameOrModel: string): string => {
-    if (!translations?.agents) return "";
+    if (!indexes) return "";
 
-    // Extract the last part of the model path if it's a path (e.g., "tm_professional/tm_professional_varf5" -> "varf5")
     const modelPart = agentNameOrModel.split('/').pop() || agentNameOrModel;
 
-    // Try to find a matching agent by comparing names (case-insensitive)
-    // The English name format: "Name | Organization"
-    // Try to match by the first part of the English name
-    const agent = translations.agents.find((a: any) => {
-      // Get the original English name from the local data
-      // Since we don't have the original name here, we'll try fuzzy matching
-      return a.id && (
-        a.id.toLowerCase().includes(modelPart.toLowerCase()) ||
-        modelPart.toLowerCase().includes(a.id.toLowerCase())
-      );
-    });
+    // Try direct lookup first
+    const agent = indexes.agentsById.get(agentNameOrModel);
+    if (agent) return agent.name;
 
-    return agent?.name || "";
+    // Fallback: try fuzzy matching by iterating through the map
+    for (const [id, agentData] of indexes.agentsById) {
+      if (
+        id.toLowerCase().includes(modelPart.toLowerCase()) ||
+        modelPart.toLowerCase().includes(id.toLowerCase())
+      ) {
+        return agentData.name;
+      }
+    }
+
+    return "";
   };
 
   /**
    * Get translated music kit name by kit ID
    */
   const getMusicKitName = (kitId: number): string => {
-    if (!translations?.music_kits) return "";
-
-    const kit = translations.music_kits.find((k: any) => k.id === kitId);
+    if (!indexes) return "";
+    const kit = indexes.musicKitsById.get(kitId);
     return kit?.name || "";
   };
 
@@ -300,9 +367,8 @@ export function useTranslation() {
    * Get translated category name
    */
   const getCategoryName = (categoryId: string): string => {
-    if (!translations?.skins) return "";
-
-    const skin = translations.skins.find((s: any) => s.category.id === categoryId);
+    if (!indexes) return "";
+    const skin = indexes.weaponsByCategoryId.get(categoryId);
     return skin?.category?.name || "";
   };
 
@@ -310,9 +376,8 @@ export function useTranslation() {
    * Get translated rarity name
    */
   const getRarityName = (rarityId: string): string => {
-    if (!translations?.skins) return "";
-
-    const skin = translations.skins.find((s: any) => s.rarity.id === rarityId);
+    if (!indexes) return "";
+    const skin = indexes.weaponsByRarityId.get(rarityId);
     return skin?.rarity?.name || "";
   };
 
@@ -320,14 +385,14 @@ export function useTranslation() {
    * Get translated wear name
    */
   const getWearName = (wearId: string): string => {
-    if (!translations?.skins) return "";
+    if (!translations?.skins?.[0]?.wears) return "";
 
     const wearMap: Record<string, string> = {
-      "SFUI_InvTooltip_Wear_Amount_0": translations.skins[0]?.wears?.[0]?.name || "Factory New",
-      "SFUI_InvTooltip_Wear_Amount_1": translations.skins[0]?.wears?.[1]?.name || "Minimal Wear",
-      "SFUI_InvTooltip_Wear_Amount_2": translations.skins[0]?.wears?.[2]?.name || "Field-Tested",
-      "SFUI_InvTooltip_Wear_Amount_3": translations.skins[0]?.wears?.[3]?.name || "Well-Worn",
-      "SFUI_InvTooltip_Wear_Amount_4": translations.skins[0]?.wears?.[4]?.name || "Battle-Scarred",
+      "SFUI_InvTooltip_Wear_Amount_0": translations.skins[0].wears[0]?.name || "Factory New",
+      "SFUI_InvTooltip_Wear_Amount_1": translations.skins[0].wears[1]?.name || "Minimal Wear",
+      "SFUI_InvTooltip_Wear_Amount_2": translations.skins[0].wears[2]?.name || "Field-Tested",
+      "SFUI_InvTooltip_Wear_Amount_3": translations.skins[0].wears[3]?.name || "Well-Worn",
+      "SFUI_InvTooltip_Wear_Amount_4": translations.skins[0].wears[4]?.name || "Battle-Scarred",
     };
 
     return wearMap[wearId] || "";
@@ -337,9 +402,8 @@ export function useTranslation() {
    * Get translated sticker name by sticker ID
    */
   const getStickerName = (stickerId: string): string => {
-    if (!translations?.stickers) return "";
-
-    const sticker = translations.stickers.find((s: any) => s.id === stickerId);
+    if (!indexes) return "";
+    const sticker = indexes.stickersById.get(stickerId);
     return sticker?.name || "";
   };
 
@@ -347,9 +411,8 @@ export function useTranslation() {
    * Get translated sticker rarity by sticker ID
    */
   const getStickerRarity = (stickerId: string): string => {
-    if (!translations?.stickers) return "";
-
-    const sticker = translations.stickers.find((s: any) => s.id === stickerId);
+    if (!indexes) return "";
+    const sticker = indexes.stickersById.get(stickerId);
     return sticker?.rarity?.name || "";
   };
 
@@ -357,9 +420,8 @@ export function useTranslation() {
    * Get translated sticker tournament name by sticker ID
    */
   const getStickerTournament = (stickerId: string): string => {
-    if (!translations?.stickers) return "";
-
-    const sticker = translations.stickers.find((s: any) => s.id === stickerId);
+    if (!indexes) return "";
+    const sticker = indexes.stickersById.get(stickerId);
     return sticker?.tournament?.name || "";
   };
 
@@ -367,12 +429,10 @@ export function useTranslation() {
    * Get translated sticker collection/crate name by sticker ID and index
    */
   const getStickerCollection = (stickerId: string, index: number = 0): string => {
-    if (!translations?.stickers) return "";
-
-    const sticker = translations.stickers.find((s: any) => s.id === stickerId);
+    if (!indexes) return "";
+    const sticker = indexes.stickersById.get(stickerId);
     if (!sticker) return "";
 
-    // Try collections first, then crates
     const collection = sticker.collections?.[index] || sticker.crates?.[index];
     return collection?.name || "";
   };
@@ -381,9 +441,8 @@ export function useTranslation() {
    * Get translated keychain name by keychain ID
    */
   const getKeychainName = (keychainId: string): string => {
-    if (!translations?.keychains) return "";
-
-    const keychain = translations.keychains.find((k: any) => k.id === keychainId);
+    if (!indexes) return "";
+    const keychain = indexes.keychainsById.get(keychainId);
     return keychain?.name || "";
   };
 
@@ -391,9 +450,8 @@ export function useTranslation() {
    * Get translated keychain rarity by keychain ID
    */
   const getKeychainRarity = (keychainId: string): string => {
-    if (!translations?.keychains) return "";
-
-    const keychain = translations.keychains.find((k: any) => k.id === keychainId);
+    if (!indexes) return "";
+    const keychain = indexes.keychainsById.get(keychainId);
     return keychain?.rarity?.name || "";
   };
 
@@ -401,9 +459,8 @@ export function useTranslation() {
    * Get translated keychain collection name by keychain ID and index
    */
   const getKeychainCollection = (keychainId: string, index: number = 0): string => {
-    if (!translations?.keychains) return "";
-
-    const keychain = translations.keychains.find((k: any) => k.id === keychainId);
+    if (!indexes) return "";
+    const keychain = indexes.keychainsById.get(keychainId);
     if (!keychain) return "";
 
     const collection = keychain.collections?.[index];
